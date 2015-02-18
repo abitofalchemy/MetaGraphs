@@ -11,3 +11,10 @@ Thumbs.db
 # data files
 dblp_data
 imdb_data
+.Rproj.user
+
+# Tools
+Sandbox/
+gramiSandbox/
+
+

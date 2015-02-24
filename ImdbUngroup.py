@@ -24,9 +24,9 @@ def ungroup_actors_list(data_file):
 			else:
 				hold_name = Name
 				actor_movie_data.append([hold_name, Title])
-			print [hold_name, Title]
+			#print [hold_name, Title]
 			k += 1
-			if k>20: break
+			#if k>20: break
 
 	return actor_movie_data
 

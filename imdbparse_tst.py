@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from collections import OrderedDict
 from itertools import islice
+import pprint as ppr
 
 def imdb_parse_movies():
 	
@@ -32,31 +33,38 @@ def imdb_parse_movies():
 
 def imdb_parse_actors_list():
 	in_file = "imdb_data/actors.list"
-	print 'imdb_parse_actors_list'	
+	print 'imdb_parse_actors_list','\n','-'*80
 	with open(in_file) as f:
+		#lines = list(islice(f,1,1000))
 		local_data = []# key = movie, value = array of actors
 		k = l = start_line_reached = 0
 		for line in f:
-			if ('----\t\t\t------') in line: start_line_reached = True
-			line = line.replace('\tFredersdorff','Fredersdorff')
-			line = line.replace('\t\t','\t')
-			line = line.replace('\t\t','\t')
-			line = line.replace('\t]',']')
-			line_parts = line.rstrip('\r\n').split('\t')
-			for part in line_parts:
-				part.replace('\t','')
-			if (start_line_reached and len(line_parts)>1):
-				#print k, line_parts
-				if len(line_parts)>2:
+			if ('----\t\t\t------') in line: 
+				start_line_reached = True
+				continue
+			else: 
+				k+=1
+			if not start_line_reached: continue
+			pattern = re.compile(r'(.*)\t(.*\(\d{4}\))')
+			line_parts= pattern.search(line)
+			if line_parts is not None: 
+				#print line_parts.groups()
+
+			#line = line.replace('\tFredersdorff','Fredersdorff')
+			#line = line.replace('\t\t','\t')
+			#line = line.replace('\t\t','\t')
+			#line = line.replace('\t]',']')
+			#line_parts = line.rstrip('\r\n').split('\t')
+				
+				if len(line_parts.groups())>2:
 					print line_parts, line
-				k += 1
-				pattern = re.compile(r'(.*\s\(\d{4}\))')
-				mtitle = pattern.search(line_parts[1])
-				if mtitle is not None: 
-						#print ( [line_parts[0], mtitle.group(1)])
-					local_data.append( [line_parts[0], mtitle.group(1)])
+					#pattern = re.compile(r'(.*\s\(\d{4}\))')
+					#mtitle = pattern.search(line_parts[1])
+				local_data.append( [line_parts.group(1).replace('\t',''), 
+														line_parts.group(2)] )
+
 								#end of for loop	 
-				#if k>10: break
+	#ppr.pprint (local_data)
 	return local_data
 
 def imdb_parse_actresses_list():

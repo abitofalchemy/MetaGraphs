@@ -1,0 +1,42 @@
+---
+title: "MetaGraphs"
+author: "S. Aguinaga"
+date: "2/21/2015"
+output: html_document
+---
+</br>
+<h2>Working Folder</h2>
+- dsg1:/data/saguinag/MetaGraphs
+
+<h2>Datasets</h2>
+
+- DBLP
+- IMDB
+
+*DBLP* 
+
+*IMDB* Datasets are available at `idmb_data/`
+
+<h2>Data Preparation </h2>
+
+
+- *IMDB* 
+Original (.list) files are parsed into a set of CSV files for movies (titles), actors, and actresses.  An inner join results into a data.frame that contains 
+the titles and authors in those movies.  From these data.frame vertices 
+and edges output files are created, then concatenated into a single SUBDUE graph
+format input-file (.g).
+
+
+<h2>Toy Graph</h2>
+
+
+
+```{r, echo=FALSE}
+# from http://www.r-bloggers.com/network-visualization-in-r-with-the-igraph-package/
+require(igraph)
+# Load the data. The data needs to be loaded as a table first: 
+bsk<-read.table("imdb_data/imdb_100.ig") 
+bsk.network<-graph.data.frame(bsk, directed=F) #the 'directed' attribute specifies whether the edges are directed
+plot(bsk.network)
+```
+

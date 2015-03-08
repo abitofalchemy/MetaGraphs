@@ -1,0 +1,16 @@
+---
+title: "MetaGraphVis"
+author: "S.Aguinaga"
+date: "02/22/2015"
+output: html_document
+---
+
+
+```{r, echo=FALSE}
+require(igraph)
+# Load the data. The data needs to be loaded as a table first: 
+bsk<-read.table("../imdb_data/imdb_100.ig") 
+bsk.network<-graph.data.frame(bsk, directed=F) #the 'directed' attribute specifies whether the edges are directed
+plot(bsk.network)
+```
+

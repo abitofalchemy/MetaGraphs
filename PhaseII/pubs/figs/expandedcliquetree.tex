@@ -1,0 +1,100 @@
+
+
+\begin{figure}
+\centering
+\resizebox{.7\linewidth}{!}{
+
+
+\begin{tikzpicture}
+\node [opencircle](v1) at (-1.0,1.5) {1};
+\node [opencircle](v2) at (0,1.5) {2};
+\node [opencircle](v3) at (0,0.5) {3};
+\node [opencircle](v4) at (1.0,0.5) {4};
+\node [opencircle](v5) at (0,-0.5) {5};
+\node [opencircle](v6) at (1.0,-0.5) {6};
+\draw  (v1) edge (v2);
+\draw  (v1) edge (v5);
+\draw  (v2) edge (v3);
+\draw  (v2) edge (v4);
+\draw  (v3) edge (v4);
+\draw  (v3) edge (v5);
+\draw  (v4) edge (v6);
+\draw  (v5) edge (v6);
+
+%
+
+\node [externalnode](a) at (3.9,2.2) {3};
+\node [externalnode](b) at (4.5,2.2) {4};
+\node [externalnode](c) at (3.9,1.6) {5};
+\draw  (a) edge (c);
+\draw  (a) edge (b); 
+\draw  [dashed](b) edge (c);
+\node [itxset,minimum width=35, minimum height=35] at (4.2,1.9) {};
+\node [externalnode](d) at (2.8,.8) {2};
+\node [externalnode, fill, text=white](e) at (2.8,.2) {{3}};
+\node [externalnode, fill, text=white](f) at (3.4,.2) {{4}};
+\node [externalnode, fill, text=white](g) at (2.8,-0.4) {{5}};
+%\draw  [line width=3pt](a) edge (e);
+
+\node[itxset,minimum width=36, minimum height=50] at (3.0,.2) {};
+\draw  (d) edge (e);
+\draw  (d) edge (f);
+\draw  [dashed](d) [out=-135, in=-225] to  (g);
+\draw  (e) edge (f);
+\draw  (e) edge (g);
+\draw  [dashed](f) edge (g); 
+\draw [shorten >=2mm, shorten <=4mm] (a) -- (d);
+%\draw [shorten >=-1mm, shorten <=-1mm] (b) -- (f);
+%\draw [shorten >=-1mm, shorten <=-1mm] (c) -- (g);
+
+\node [externalnode](h) at (2.8,-1.3) {1};
+\node [externalnode, fill, text=white](i) at (3.4,-1.3) {{2}};
+\node [externalnode, fill, text=white](j) at (3.4,-2.2) {{5}};
+
+\node[itxset,minimum width=36, minimum height=42] at (3,-1.75) {};
+
+\draw  (h) edge (i);
+\draw  (h) edge (j);
+\draw  [dashed](i) edge (j);
+
+\draw [shorten >=11mm, shorten <=1.5mm] (g) -- (j);
+%\draw [shorten >=-1mm, shorten <=-1mm] (g) -- (j);
+
+\node [externalnode, fill, text=white](k) at (5.8,.7) {{4}};
+\node [externalnode, fill, text=white](l) at (5.2,.1) {{5}};
+\node [externalnode](m) at (5.8,.1) {6};
+
+\draw  [dashed](k) edge (l);
+\draw  (k) edge (m);
+\draw  (l) edge (m);
+
+\draw [shorten >=3mm, shorten <=3mm] (b) -- (k);
+
+\node[itxset,minimum width=35, minimum height=35] at (5.5,.4) {};
+\node [externalnode, fill, text=white](n) at (5.2,-1.0) {{5}};
+\node [externalnode, fill, text=white](o) at (5.8,-1.0) {{6}};
+
+\draw  (n) edge (o);
+
+
+\node[itxset,minimum width=35,minimum height=20] at (5.5,-1.0) {};
+\draw [shorten >=3mm, shorten <=2mm] (m) -- (n);
+%\draw [shorten >=-1mm, shorten <=-1mm]  (m) -- (o);
+
+\node [externalnode, fill, text=white](p) at (5.5,-2) {{6}};
+
+\node[itxset,minimum width=25,minimum height=20] at (5.5,-2) {};
+
+\draw [shorten >=2mm, shorten <=2mm] (n) -- (p);
+
+\node (s) at (0,2.8) {\small Original Graph};
+\node (r) at (4.3,2.8) {\small Clique Tree};
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (1.3,0.5) -- (2.0,0.5);
+\end{tikzpicture}
+}
+
+\caption{Caption}
+\label{fig:expdtree}
+\end{figure}

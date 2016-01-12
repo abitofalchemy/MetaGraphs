@@ -1,0 +1,1246 @@
+\documentclass[reprint,twocolumn,showpacs,preprintnumbers,amsmath, aps,pre,amssymb]{revtex4-1}
+
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+\usepackage{comment}
+\usepackage[caption=false]{subfig}
+\usepackage{graphicx}
+
+\usepackage[ruled,vlined,commentsnumbered]{algorithm2e}
+\usepackage{adjustbox}
+\usepackage{paralist}
+\usepackage{lipsum}
+\usepackage{bbm}
+\usepackage{times}
+
+
+
+
+\newcommand{\tg}[1]{}
+
+\usepackage{expl3}
+\ExplSyntaxOn
+\newcommand\latinabbrev[1]{
+  \peek_meaning:NTF . {% Same as \@ifnextchar
+    #1\@}%
+  { \peek_catcode:NTF a {% Check whether next char has same catcode as \'a, i.e., is a letter
+      #1.\@ }%
+    {#1.\@}}}
+\ExplSyntaxOff
+\newcommand\etal{\latinabbrev{et al}}
+\newcommand\vs{\latinabbrev{vs}}
+
+\newtheorem{definition}{Definition}
+\newcommand{\ignore}[1]{}
+
+\newcommand{\avg}[1]{\left\langle #1 \right\rangle}
+\newcommand\kpr{k^{\prime}}
+\newcommand{\xpr}{x^{\prime}}
+\newcommand\eg{\emph{e.g.}}
+\newcommand\ie{\emph{i.e.}}
+\newcommand\etc{\emph{etc.}}
+\newcommand\bcmdtab{\noindent\bgroup\tabcolsep=0pt%
+  \begin{tabular}{@{}p{10pc}@{}p{20pc}@{}}}
+\newcommand\ecmdtab{\end{tabular}\egroup}
+\newcommand\rch[1]{$\longrightarrow\rlap{$#1$}$\hspace{1em}}
+\newcommand\lra{\ensuremath{\quad\longrightarrow\quad}}
+	
+\newcommand{\secref}[1]{Section~\ref{#1}}
+\newcommand{\figref}[1]{Figure~\ref{#1}}
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+ \newcommand{\remove}[1]{}
+\usepackage{color}
+\newcommand{\note}[2]{{\color{red} {\bf [#1]:}~#2}}
+\newcommand{\noteTW}[1]{\note{TW}{#1}}
+\newcommand{\sect}[1]{Section~\ref{#1}}
+\newcommand{\sectA}[1]{Appendix Sec.~\ref{#1}}
+
+
+\newcommand{\from}[2]{{\bf [{\sc from #1:} #2]}}
+\newcommand{\nop}[1]{}
+
+
+% page margins
+\textwidth 6in \textheight 9in \topmargin -0.5in \oddsidemargin
+0.25in \evensidemargin 0.25in
+\newcommand{\figwidth}{1.9in}
+\newcommand{\figwidthW}{3.6in}
+
+
+\usepackage{color}
+\newcommand{\changed}[1]{{\color{red} #1}}
+
+\usepackage[nolist]{acronym}
+
+\begin{document}
+
+
+\label{firstpage}
+
+
+\title{Fact Checking in Large Knowledge Graphs \\ A Discriminative Predicate Path Mining Approach}
+
+\author{Baoxu Shi}
+ \email{bshi@nd.edu}
+\author{Tim Weninger}
+ \email{tweninge@nd.edu}
+\affiliation{%
+$^{\ast\dag}$Department of Computer Science and Engineering,
+University of Notre Dame, Notre Dame, Indiana, USA
+}%
+\date{\today}
+
+
+
+
+
+
+
+\begin{abstract}
+Traditional fact checking by experts and analysts cannot keep pace with the volume of newly created information. It is important and necessary, therefore, to enhance our ability to computationally determine whether some statement of fact is true or false. We view this problem as a link-prediction task in a knowledge graph, and show that a new model of the top \emph{discriminative predicate paths} is able to understand the meaning of some statement and accurately determine its veracity. We evaluate our approach by examining thousands of claims related to history, geography, biology, and politics using a public, million node knowledge graph extracted from Wikipedia and PubMedDB. Not only does our approach significantly outperform related models, we also find that the discriminative predicate path model is easily interpretable and provides sensible reasons for the final determination. 
+\end{abstract}
+
+\maketitle
+
+\section{Introduction} \label{sec:introduction}
+
+
+\begin{adjustbox}{minipage=0.82\linewidth,margin=0pt \smallskipamount,center}
+        \begin{raggedright}
+        \textit{\small{If a Lie be believ'd only for an Hour, it has done its Work, and there is no farther occasion for it. Falsehood flies, and the Truth comes limping after it.}}
+        \end{raggedright}
+        \begin{flushright}
+        \vspace{-4pt}
+        \small{-- Jonathan Swift (1710)~\cite{Swift1710}}
+        \end{flushright}
+        \vspace{2pt}
+\end{adjustbox}
+
+
+% TODO: Extend this part to include more information about computational journalism or other things so people think this is important
+Misinformation in media and communication creates a situation in which opposing assertions of fact compete for attention. This problem is exacerbated in modern, digital society, where people increasingly rely on the aggregate ratings from their social circles for news and information. Although much of the information presented on the Web is a good resource, its accuracy certainly cannot be guaranteed. In order to avoid being fooled by false assertions, it is necessary to separate fact from fiction and to assess the credibility of an information source.
+
+To summarize, we show that we can leverage a collection of factual statements for automatic fact checking. Based on the principles underlying link prediction, similarity search and network closure, we computationally gauge the truthfulness of an assertion by mining connectivity patterns within a network of factual statements. Our current work focuses on determining the validity of factual assertions from simple, well-formed statements; the related problems of information extraction~\cite{Etzioni2004}, claim identification~\cite{Hassan2015}, answering compound assertions~\cite{Wu2014}, and others~\cite{Nickel2015} are generally built in-support-of or on-top-of this central task.
+
+%\ignore{\vspace{5pt}\noindent{\textbf{Knowledge Graphs}.} }
+
+We represent a \textit{statement of fact} in the form of (\textsf{subject}, \textsf{predicate}, \textsf{object}) triples, where the \textsf{subject} and the \textsf{object} are entities that have some relationship between them as indicated by the \textsf{predicate}. For example, the \textit{``Springfield is the capital of Illinois''} assertion is represented by the triple (\textsf{Springfield}, \textsf{capitalOf}, \textsf{Illinois}). A set of such triples is known as a knowledge base, but can be combined to produce a multi-graph where nodes represent the entities and directed edges represent the predicates. Different predicates can be represented by edge types, resulting in a heterogeneous information network that is often referred to as a \textit{knowledge graph}.
+
+Given a knowledge base that is extracted from a large repository of statements, like Wikipedia or the Web at large, the resulting knowledge graph represents \emph{some} of the factual relationships among the entities mentioned in the statements. If there existed an ultimate knowledge graph which knew everything, then fact checking would be as easy as checking for the presence of an edge in the knowledge graph. In reality, knowledge graphs have limited information and are often plagued with missing or incorrect relations making validation difficult.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{./figs/city_capital_example}
+\caption{Knowledge graph of US cities and states from DBpedia. $\{\textsf{city}\}\xrightarrow{\textsf{largestCity}^{-1}}\{\textsf{state}\}$ and $\{\textsf{city}\}\xrightarrow{\textsf{headquarter}^{-1}}\{\textsf{entity}\}\xrightarrow{\textsf{jurisdiction}}\{\textsf{state}\}$ are the discriminative paths of $\{\textsf{city}\}\xrightarrow{\textsf{capitalOf}}\{\textsf{state}\}$ mined by AMIE~\cite{Galarraga2013} and the proposed method respectively.}
+\label{fig:city_capital_example}
+\end{figure}
+
+Although a knowledge graph may be incomplete, we assume that most of the edges in the graph represent true statements of fact. With this assumption, existing fact checking~\cite{Ciampaglia2015} and link prediction methods~\cite{Kleinberg2007,Adamic2003,Barabasi1999,Katz1953,Haveliwala2002} would rate a given statement to be true if it exists as an edge in the knowledge graph or if there is a short path linking its subject to its object, and false otherwise. 
+
+Returning to the \textit{``Springfield is the capital of Illinois''}-example, a human fact-checker, without any knowledge of US state capitals, might look for city-entities that are most connected to \textsf{Illinois}. In this case, simple link prediction methods might return \textsf{Chicago} because it is the largest city and has the highest connectivity. Smarter models might encode various edge weights based on the entity's relative specificity~\cite{Adamic2003,Ciampaglia2015}, \eg, paths that contain generic entities like \textsf{Chicago} or \textsf{United States} provide less evidence because those generic nodes link to many other entities. Paths that contain specific entities like \textsf{University of Illinois} or \textsf{Illinois State Prison} provide stronger support, but still result in incorrect evidence.
+
+Rather than simply looking at the graph connectivity, a human fact-checker might first attempt to \textit{understand what it means} for an entity to be the \textsf{capitalOf} some other entity. The fact-checker would probably look at \textsf{capitalOf} edges that are present in the knowledge graph in order to learn rules that uniquely define the predicate. By doing that the fact-checker can learn the general definition of \textsf{capitalOf}, which includes definitions of the capitals of US states, but also contains capitals of countries, provinces, colloquialisms such as ``Kansas City is the soccer capital of America'', or historical or time-sensitive predicates such as ``Calcutta \emph{was} the capital of India''. Such a global definition is usually too broad to validate statements of fact with context-dependent predicates.
+
+When performed computationally, the task of discovering interesting relationships between or among entities is known generally as association rule mining. Although there has been some effort to adapt association mining for knowledge graph completion, these methods are not well suited for fact-finding and often resort to finding global rules and synonyms~\cite{Abedjan2013,Galarraga2013} rather than generating a robust understanding of the given context dependent predicate~\cite{Meng2015}.
+
+%On the other hand, humans are generally able to discern the meanings of unknown words or phrases by considering the context in which it appears. The algorithm presented in this work similarly learns the meaning of predicates within the context of a given subject and object. 
+
+Figure~\ref{fig:city_capital_example} illustrates three graph fragments from the DBpedia knowledge base~\cite{Lehmann2014} containing cities and states. This example demonstrates, via actual results, how the proposed method is able to determine relationships that uniquely define what it means for an entity to be the \textsf{capitalOf} another entity. Association rule miners~\cite{Galarraga2013} and link prediction models~\cite{Barabasi1999,Katz1953} incorrectly indicate that the \textsf{largestCity} is most associated with the \textsf{capitalOf} predicate. In contrast, our framework, indicated by solid edges, finds the rules that most uniquely define what it means to be the \textsf{capital} of a state. In this example, our top result indicates that a US state capital is the \textsf{city} in which the \textsf{headquarters} of entities that have \textsf{jurisdiction} in the \textsf{state} are located. In other words, we find that a US state capital is indeed the city where the state agencies, like the Dept. of Transportation, or the Dept. of Health, have their headquarters. 
+
+Recent work in general heterogeneous information networks, of which knowledge graphs are an example, has led to the development of meta path similarity metrics that show excellent results in clustering, classification and recommendation~\cite{Sun2012, Lao2010, Shi2014, Sun2011}. The state of the art in meta path mining works by counting the path-instances or randomly walking over a constrained set of hand-annotated typed-edges~\cite{Sun2011}. Unfortunately, this means that a human has to understand the problem domain and write down relevant meta paths before analysis can begin. In this work, our focus is on methods that automatically determine the set of path-descriptions called \textbf{predicate paths} that uniquely encapsulate the relationship between two entities in a knowledge graph.
+
+
+%Interestingly, although the rule mined by AMIE failed in this task, such global association rule can yield acceptable results if the fact is about the capitals in some part of the world, for example, China, where 27 out of 34 capitals are the largest city in each administrative region (the number of US is 17 out of 51).
+
+
+% A lot of effort has been put into computational fact checking~\cite{Wu:2014kf,Ciampaglia:2015us,Wu:2014bg,hassan2014data} but none of them have mimicked the way human evaluate a fact and therefore may not able to return a 
+
+%computational journalism emerging
+
+
+The specific contributions of this paper are as follows:
+
+\begin{enumerate}
+\item We developed a fast discriminative path mining algorithm that can discover discriminative meta path and predicate path ``definitions'' of an RDF-style triple, \ie, a statement of fact. The algorithm is able to handle large scale knowledge graphs with millions of nodes and edges.
+
+\item We designed a human interpretable fact checking framework that utilizes discriminative meta paths and predicate paths to predict the truthfulness of a statement.
+
+\item We modeled fact checking as a link prediction problem and validated our approach on two real world, large scale knowledge graphs, DBpedia~\cite{Lehmann2014} and SemMedDB~\cite{Kilicoglu2012}. The experiments showed that the proposed framework outperforms alternative approaches and has a similar execution time.
+\end{enumerate}
+
+In this paper, we incorporate lessons learned from association rule mining and from heterogeneous information network analysis in order to understand the meanings of various relationships, and we use this new framework for fact-checking in knowledge graphs. To describe our approach we first formalize the problem in Sec.~\ref{sec:problem_definition} and define our solution in Sec.~\ref{sec:discriminative_path_discovery}. Section~\ref{sec:experiment} presents extensive experiments on two large, real world knowledge graphs. We present related work in Sec.~\ref{sec:related_work} before drawing conclusions and discussing future work in Sec.~\ref{sec:conclusions}.
+
+\section{Problem Definition} \label{sec:problem_definition}
+
+
+
+We view a knowledge graph to be a special case of a heterogeneous information network (HIN) where nodes represent entities and edges represent relationships between entities, and where heterogeneity stems from the fact that nodes and edges have clearly identified type-definitions. The type of an entity is labeled by some ontology, and the type of an edge is labeled by the predicate label. With the above assumptions, and using the notation in Tab.~\ref{tab:notation}, we formally define a knowledge graph as follows:
+
+\begin{definition} \label{def:knowledge_graph}
+\textbf{Knowledge Graph}. A knowledge graph is a directed multigraph $\mathcal{G}=(\mathcal{V},\mathcal{E},\mathcal{R},\mathcal{O})$, where $\mathcal{V}$ is the set of entities, $\mathcal{E}$ is a set of labeled directed edges between 2 entities, $\mathcal{R}$ represents the predicate label set, and $\mathcal{O}$ is the ontology of the entities in $\mathcal{G}$. The ontology mapping function $\psi(v)=\mathbf{o}$, where $v \in \mathcal{V}$ and $\mathbf{o} \subset \mathcal{O}$, links an entity vertex to its label set in the ontology. The predicate mapping function $\phi(e) = p$, where $e \in \mathcal{E}$ and $p \in \mathcal{R}$, maps an edge to its predicate type.
+\end{definition}
+
+The knowledge graph defined here differs from the standard definition of an HIN; Defn.~\ref{def:knowledge_graph} dictates that a node may be mapped to multiple types, which is unlike the traditional HIN definition in which each node can be mapped to only one type-label~\cite{Sun2011}. When $\psi(v) = \mathbf{o}$ satisfies $|\mathbf{o}| = 1$ for all $v \in \mathcal{V}$, then Defn.~\ref{def:knowledge_graph} degenerates to the standard HIN definition.
+
+For example, the DBpedia knowledge base can be represented as a knowledge graph in which $\mathcal{V}$ represents entities like \textsf{Springfield}, \textsf{Chicago}, or \textsf{Illinois}; $\mathcal{E}$ represents some link between two entities; $\mathcal{O}$ represents a classification scheme like the Wikipedia Category graph with type-labels like \textsf{city} and \textsf{state} categories for \textsf{Chicago} and \textsf{Illinois} respectively; and $\mathcal{R}$ represents the predicate labels like \textsf{capitalOf} and \textsf{largestCity} for edges.
+
+Typed nodes and edges given in the knowledge graph naturally result in an enhanced set of connections called \emph{meta paths} that describe how two entities are connected by their type-labels.
+
+\begin{definition} \label{def:meta_path}
+\textbf{Meta Path}. Given a knowledge graph $\mathcal{G}=(\mathcal{V},\mathcal{E},\mathcal{R},\mathcal{O})$, a meta path $\Pi^{k}$ is defined as a directed, typed sequence of vertices and edges $\mathbf{o}_1 \xrightarrow{p_1} \mathbf{o}_2 \xrightarrow{p_2} \ldots \xrightarrow{p_{k-1}} \mathbf{o}_k$ in $\mathcal{G}$, where $\mathbf{o}_i$ denotes the set of ontology labels of vertex $i$, $p_i$ represents the predicate of the directed edge that connects vertex $i$ to $i+1$, and $k$ denotes the length of the meta path.
+\end{definition}
+
+%For simplicity, we denote the meta path $\Pi^{k}$ as a sequence of vertex-types $O_k=\{\mathbf{o}_i | i \in 1:k\}$, and a sequence of predicates $P_{k-1} = \{r_i | i \in 1:(k-1) \}$. The combination of entity-types and predicates on a meta-path is thereby represented by the tuple $(O_k, P_{k-1})$.
+
+For example, a meta path between two entities \textsf{Illinois} and \textsf{Springfield} is represented by the following sequence $\{\textsf{city}, \textsf{settlement}\} \\ \xrightarrow {\textsf{headquarter}^{-1}} \{\textsf{state agency}\} \xrightarrow {\textsf{jurisdiction}} \{\textsf{state}\}$, which means that an agency with jurisdiction in a state has its headquarters in the capital. Note that in our generalization of HIN, the first entity in the meta path is mapped to two type-labels, and could have many more.
+
+With the definitions of knowledge graph and meta path, here we define the discriminative meta path of a statement as:
+
+\begin{definition} \label{def:discriminative_path}
+\textbf{Discriminative Meta Paths}. The set of discriminative meta paths $\mathbf{\Pi}^k_{(\mathbf{o}_u,\mathbf{o}_v)}$ are those meta paths that alternatively describe the given statement of fact $\mathbf{o}_u\xrightarrow{p}\mathbf{o}_v$, where the maximum path length is $k$.% and $\mathbf{o}_1 = \mathbf{o}_u$, $\mathbf{o}_{k^\prime} = \mathbf{o}_v$ for $(O_{k^\prime},P_{k^\prime-1}) \in \mathcal{P}^k_{(\mathbf{o}_u, \mathbf{o}_v)}$.
+\end{definition}  
+
+The illustration in Fig.~\ref{fig:city_capital_example} shows an example discriminative meta path \textsf{\{city, settlement\}}$\xrightarrow {\textsf{headquarter}^{-1}}$ $\{\textsf{state agency}\}$ $\xrightarrow{\textsf{jurisdiction}}$ $\{\textsf{state}\}$ that alternatively represents the \textsf{capitalOf} predicate. We discuss how to discover these discriminative meta paths in the next section.
+
+\begin{table}[t]
+\centering
+\caption{List of Notations}
+\begin{tabular}{c l}
+\hline
+$\mathcal{G}=(\mathcal{V},\mathcal{E},\mathcal{R},\mathcal{O})$ & Directed multigraph \\ 
+$v$ & Entity node in $\mathcal{V}$ \\ 
+$e$ & Directed edge in $\mathcal{E}$ \\ 
+$p$ & Edge type/predicate in $\mathcal{R}$ \\ 
+$\psi(v)$ & Entity type mapping function \\ 
+$\phi(e)$ & Edge type mapping function \\ 
+$\mathbf{o}_u$ & Type set of node $u$, $\mathbf{o}_u \subset \mathcal{O}$ \\ 
+$\mathbf{\Pi}$ & Set of meta paths $\Pi\in\mathbf{\Pi}$  \\
+$\mathcal{P}$ & Set of actual paths in $\mathcal{G}$\\
+$\mathbf{P}$ & Set of predicate paths $P\in\mathbf{P}$ \\
+$\mathbf{X}$ & Training instance matrix \\
+$\mathbf{y}$ & Instance label vector\\
+$\mathbf{w}$ & Importance vector \\
+$\delta$, $\theta$ & Importance threshold \\
+\hline
+\end{tabular}
+\label{tab:notation}
+\end{table}
+
+With the definitions above, we formally define fact checking in knowledge graph as:
+
+%------------separate the definition of discriminative meta path set and the problem
+
+\begin{definition} \label{def:fact_checking}
+
+\textbf{Fact Checking}. Given a knowledge graph $\mathcal{G}$ and a statement of fact $(s, p, t)$, which may be true or untrue, where subject $s \in \mathcal{V}$, object $t \in \mathcal{V}$, and predicate $p \in \mathcal{R}$. Fact checking is the process of determining the probability that an edge $s \xrightarrow{p} t$ is missing in $\mathcal{G}$ using $\mathbf{\Pi}^k_{(\mathbf{o}_u,\mathbf{o}_v)}$ such that $\mathbf{o}_s=\mathbf{o}_u$ and $\mathbf{o}_t=\mathbf{o}_v$.
+\end{definition}
+
+
+Simply put, we view the fact checking problem as a link prediction task and validate a proposed fact statement $(s, p, t)$ by determining the probability that the proposed fact is implied by the data within the knowledge graph.
+
+In this work we propose a model that automatically discovers discriminative meta paths in order to perform fact checking. The resulting discriminative meta paths essentially define the proposed predicate $p$ in terms of its subject $s$ and its object $t$ by asking two questions: 1) does the predicate $p$ connect entities that are of the same or similar type as $s$ and $t$, and 2) do the paths that connect $s$ to $t$ differ from the paths that connect similarly-typed entities but which are \emph{not} connected by $p$?
+
+The paths that maximize the above questions 1 and 2 are those paths that uniquely define the predicate in terms of its subject and object. These paths are critical to modelling statements of fact and determining their veracity.
+
+Next we will demonstrate how to test the veracity of statements of fact using discriminative meta path analysis. 
+
+%NEED THIS SOMEWHER
+
+
+%NEED THIS SOMEWHEREIn the rest of this section, we will discuss how we generated $\mathcal{P}^{k}_{\mathbf{T}}$ and $\mathcal{P}^{k}_{\mathbf{T^\prime}}$ with our meta path discovery algorithm and the method we used to extract discriminative path set $\mathcal{P}^{k}_{\mathbf{o}_u,\mathbf{o}_v}$.
+
+%----------- Move predicate path to meta path predicate path comparison section
+
+%In some cases, we may only refer to the \emph{predicate path}, which is define as:
+
+%\begin{definition} \label{def:predicate_path}
+%\textbf{Predicate Path}. Given a $k$-length meta path $\Pi^{1\ldots k} = (O_k, P_{k-1})$, the predicate path is defined as the corresponding directed, typed sequence of edges $P_{k-1} = {r_1,r_2,\ldots,r_{k-1}}$.
+%\end{definition}
+
+%The predicate path is a short-hand version of the meta path. For example, the meta path above can be described as a predicate path $\langle\textsf{headquarter}^{-1}, \textsf{jurisdiction}\rangle$ without any entity-type information.
+
+%----------- Predicate path definition end
+
+
+\section{Discriminative Path Analysis} \label{sec:discriminative_path_discovery}
+
+As defined above, \emph{discriminative} meta paths are those meta paths $\mathbf{\Pi}^{k}_{(\mathbf{o}_s,\mathbf{o}_t)}$ that alternatively represent the predicate $p$ from some proposed fact triple $(s, p, t)$ between subjects of the same type as $s$ (denoted $\psi({s})$) and objects of the same type as $t$ (denoted $\psi({t})$). For example, the proposed fact triple at the top of Fig.~\ref{fig:city_capital_example} is (\textsf{Springfield}, \textsf{capitalOf}, \textsf{Illinois}). Other subjects of the same \textsf{\{city, settlement\}}-type include \textsf{Indianapolis}, \textsf{Chicago}, \textsf{New York City}, \textsf{Albany}, etc., and other objects of the same \textsf{\{state\}}-type include \textsf{New York}, \textsf{Indiana}, etc. In this example, one of the meta paths that alternatively and uniquely capture this relationship is \textsf{\{city, settlement\}}$\xrightarrow{\textsf{headquarter}^{-1}}$\{\textsf{state agency}\}$\xrightarrow{\textsf{jurisdiction}}$\{\textsf{state}\}.
+
+
+In addition to this meta path, $\mathbf{\Pi}^{k}_{(\textbf{o}_s,\textbf{o}_t)}$ includes many other discriminative meta paths of length $\le k$ that connect $\psi(u)=\textbf{o}_s$ to $\psi(v)=\textbf{o}_t$, that is, $\{\textsf{city}, \textsf{settlement}\}$ to $\{\textsf{state}\}$.
+
+In Fig.~\ref{fig:system}, we illustrate our proposed fact checking system that contains 3 phases: 1) extraction, 2) selection, and 3) validation. The extraction phase collects meta paths that alternatively connect the subject and object of a proposed statement of fact. Using the extracted meta paths, the selection phase finds the most discriminating meta paths as a way of defining the fact. The validation phase compares the actual statement of fact, \ie, how the subject, predicate and object are actually connected, with a regression model constructed from discriminative meta paths. 
+
+
+
+
+%During path extraction phase, the algorithm collects all valid meta paths that connect the subject and object of given statement $(\mathbf{o}_u,p,\mathbf{o}_v)$ and constructs meta path feature space $\mathcal{P}^{k}$ with a length constraint $k$. Then path selection is performed on $\mathcal{P}^{k}$ to generate discriminative path set $\mathcal{P}^{k}_{(\mathbf{o}_u,\mathbf{o}_v)}$. When a fact query $(s,p,t)$ was received, the system will first find meta paths between entity $s$ and $t$ and then compare the discovered meta path set to discriminative path set $\mathcal{P}^{k}_{(\mathbf{o}_s,\mathbf{o}_t)}$.
+
+% The Path Extraction phase in our method can work with positive only training set, positive and negative training set, or even a single predicate as the input depending on the purpose. When the users need a specific fact checking model for subset of a general question or distinguishing two ambiguous relations, for example ``\textit{capital of a state among its most populous cities}'', both true and false labeled data are needed to find the difference between $\textsf{largestCity}$ and $\textsf{capitalOf}$. When the users need a fact checking model that checks a certain subset of a general question without ambiguity, for example ``\textit{the state in which a capital city located}'', the false labeled data are not necessary because the system can automatically generate them based on true labeled data. When the users want a universal fact checking model for a general question, for example ``\textit{the author of a book}'', then only the predicate $\textsf{authorOf}$ is needed since the system can generate both negative and positive data based on the predicate.
+
+\begin{figure*}[t]
+\centering
+\begin{minipage}[c]{0.92\textwidth}
+\centering
+\includegraphics[width=\textwidth]{./figs/illustration_expanded}
+    \caption{Overview of the proposed fact checking framework. We first extract meta/predicate paths from labeled data set. Then we preform feature selection on the meta/predicate paths to determine the importance of each meta/predicate path and construct the prediction model. Finally we compare the given statement of fact with the learned model and output the judgement. This figure is best viewed in color.}
+    \label{fig:system}
+\end{minipage}
+\end{figure*}
+
+\subsection{Meta Path Extraction} \label{sec:meta_path_extraction}
+
+
+Unlike existing meta path based models, which require hand annotation~\cite{Sun2011,Shi2014} or exhaustive enumeration~\cite{Lao2010} and are impractical on large-scale systems, we learn the best descriptions automatically.
+
+We propose a fast discriminative path discovery algorithm using a constrained graph traversal process. The key idea is the assumption that although the number of paths in a knowledge graph is huge, only a small portion are actually helpful for a given task. Furthermore, among the reduced set of helpful meta paths, only a few may be discriminative in the presence of some predicate.
+
+For example, if (\textsf{Springfield}, \textsf{capitalOf}, \textsf{Illinois}) is the proposed statement of fact in need of checking, the meta paths we are interested in are only those that start at a \textsf{city} and end at a \textsf{state}. So instead of enumerating all possible meta paths, we collect meta paths by traversing the graph starting from the given subject-entity and ending at the given object-entity up to a length of $k$.
+
+Formally, for a given statement of fact $(s, p, t)$, the extraction algorithm collects meta paths of length $\le k$ between all alternative starting points $u$, such that, $\mathbf{o}_u=\mathbf{o}_s$ and all alternative endpoints $v$, such that, $\mathbf{o}_v=\mathbf{o}_t$. 
+
+To find which paths between $\mathbf{o}_u$ and $\mathbf{o}_v$ are most discriminating we further define positive and negative node-pairs $\mathbf{T}^+$ and $\mathbf{T}^-$ respectively, where $\mathbf{T}^+ = \{(u,v)| u \xrightarrow{p} v \in \mathcal{G}\}$ and $\mathbf{T}^- = \{(u,v)| u \xrightarrow{p} v \notin \mathcal{G}\}$. Note that $\mathbf{T} = \mathbf{T}^+ \cup \mathbf{T}^-$ can be human provided or automatically gathered from the knowledge graph.
+
+With both positive and negative node pair sets, $\mathbf{T}^+$ and $\mathbf{T}^-$, it is straightforward to retrieve two meta path sets $\mathbf{\Pi}^{+}$ and $\mathbf{\Pi}^{-}$ respectively using a multigraph traversal method that operates in a depth-first manner. Specifically, our DFS-like graph traversal is based on a closure function $\mathbb{C}$, which we define as:
+
+\begin{equation}
+\begin{split}
+\mathbb{C}_p(v) = &\left\{(p,v^\prime)|(v,p,v^\prime)\in \mathcal{G}\right\} \cup
+\\ & \left\{(p^{-1},v^\prime)|(v^\prime,p,v)\in \mathcal{G}\right\},
+\end{split}
+\end{equation}
+
+\noindent{}where $v$ is some entity-node and $p$ denotes the predicate associated with the closure. Simply put, $\mathbb{C}_p(v)$ finds all nodes that can be reached from $v$ via predicate $p$ or $p^{-1}$.
+
+Then we define a transition function $\mathcal{T}(v_i)$ which returns all $v_{i+1}$ candidates, \ie, all of the next entity-nodes, for a path $v_1 \xrightarrow{p_1} v_2 \xrightarrow{p_2} \ldots \xrightarrow{p_{i-1}} v_i$ as 
+
+\begin{equation}
+\mathcal{T}(v_i) = \left\{\cup_{p \in \mathcal{R}}\mathbb{C}_{p}(v_{i}) \setminus \cup_{j=1}^{i}\{v_j\}\right\},
+\end{equation}
+
+\noindent{}which contains all of the possible next-nodes that can be visited from $\mathbb{C}_p(v)$ except those that have already been visited. Using the closure function $\mathbb{C}_p(v)$ and transition function $\mathcal{T}(v)$, we retrieve the path set $\mathcal{P}$ with path length $\leq k$ by $\mathcal{P} = \cup_{i=1}^k \mathcal{P}^k$, s.t.
+
+\begin{equation}
+\begin{split}
+\mathcal{P}^k = \{&s, \mathcal{T}(v_1), \mathcal{T}(v_2), \ldots, \mathcal{T}(v_{k-2}), t | \\ & (s,t)\in\mathbf{T}, v_1 = s, v_i \in \mathcal{T}(v_{i-1}), t \in \mathcal{T}(v_{k-1}) \}.
+\end{split}
+\end{equation}
+
+
+Unlike traditional graph traversal algorithms that follow the edge direction, our implementation records and follows both directions of each visited edge if possible. In this way, the algorithm actually discovers meta paths such as \{\textsf{city}\} $\xrightarrow{\textsf{headquarter}^{-1}}$ \{\textsf{state agency}\} $\xrightarrow {\textsf{jurisdiction}}$ \{\textsf{state}\}, which is technically a three node subgraph rather than a path by traditional definitions.
+
+
+%With both positive and negative node pair sets, $\mathbf{T}^+$ and $\mathbf{T}^-$, it is straightforward to retrieve two meta path sets $\mathbf{P}^{+}$ and $\mathbf{P}^{-}$ respectively using a multigraph depth-first search that traverses through all possible meta paths between two entities within length $k$. Unlike traditional depth-first search which follows the edge direction, our implementation records and follows both directions of each visited edge if possible. In this way, the algorithm actually discovers meta paths such as $\textsf{city} \xrightarrow {\textsf{headquarter}^{-1}} \textsf{state agency} \xrightarrow {\textsf{jurisdiction}} \textsf{state}$, which is actually a three node sub-graph rather than a path by traditional definitions.
+
+
+% using path extraction algorithm described in Algorithm~\ref{algo:find_path}.
+
+\ignore{
+\IncMargin{1em}
+\begin{algorithm}
+\SetAlgoLined
+\SetKwData{P}{$\mathbf{P}$} % meta path result
+\SetKwData{T}{$\mathbf{T}^{\LCdot}$} % input node pairs
+\SetKwData{K}{$k$} % length constraint
+\SetKwData{NodePair}{$(u,v)$} % node pair in T
+\SetKwFunction{FindMetaPath}{extractMetaPath}
+\SetKwFunction{PathExtraction}{$pathExtraction$}
+\SetKwFunction{Union}{union}
+
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{node pair set \T, length constraint \K}
+\Output{meta path set \P}
+
+\BlankLine
+
+\P = \{\}\;
+
+\ForEach{\NodePair $\in$ \T }{
+    \tcp{extract all path between $u$ and $v$}
+    \P.\Union{\FindMetaPath{$u$,$v$,\K}}\;
+}
+
+ \caption{\protect\PathExtraction{\protect\T,\protect\K}}
+ \label{algo:find_path}
+
+\end{algorithm}
+\DecMargin{1em}
+}
+
+If we relax the definition of a meta path in Defn.~\ref{def:meta_path} in such a way that the edges still carry type-information, but the nodes do not, then the meta path degenerates into a predicate path:
+
+
+\begin{definition} \label{def:predicate_path}
+\textbf{Predicate Path}. Given a $k$-length meta path $\Pi^{k}$, the predicate path is defined as the corresponding directed, typed sequence of edges $P^{k} = {p_1, p_2, \ldots, p_{k-1}}$.
+\end{definition}
+
+The difference between the meta path definition in Defn.~\ref{def:meta_path} and the predicate path definition in Defn.~\ref{def:predicate_path} implies that all meta paths can be relaxed into predicate paths, but there may exist multiple meta paths for a given predicate path. In practice, the predicate is typically enough to connote the types of each node. For example, the meta path above can be described as the predicate path $\langle\textsf{headquarter}^{-1}, \textsf{jurisdiction}\rangle$, where the node types can be inferred by their predicates.
+
+\subsection{Meta Path versus Predicate Path} \label{sec:metapath_predicatepath}
+
+
+\ignore{
+\begin{figure}[t]
+    \includegraphics[width=0.95\linewidth]{./figs/DBLP_example}
+    \caption{scheme of DBLP. Entity types are redundant in this case because those types (Venue, Paper, Author, Topic) can be inferred by edge types.}
+    \label{fig:DBLP_example}
+\end{figure}
+}
+
+\begin{table*}[t]
+    \centering
+    \caption{Example training instance matrix $\mathbf{X}$. Cell values represent the number of the paths in $\mathcal{G}$ anchored by the endpoints of the instances and matching predicate paths in the columns.}
+
+\resizebox{0.99\textwidth}{!}{
+    \begin{tabular}{l || c | c | c | c | l}
+
+     & $\langle\textsf{headquarter}^{-1}, \ \textsf{jurisdiction}\rangle$ & $\langle\textsf{location}^{-1}, \ \textsf{jurisdiction}\rangle$ & $\langle\textsf{headquarter}^{-1}, \ \textsf{regionServed}\rangle$ & $\langle\textsf{garrison}^{-1}, \ \textsf{country}\rangle$ & $\mathbf{y}$ \\ \hline
+$(\textsf{Chicago}$, $\textsf{Illinois})$ & 1 & 1 & 1 & 0 & N\\
+$(\textsf{Springfield}$, $\textsf{Illinois})$ & 2 & 2 & 1 & 1 & Y\\
+$(\textsf{Kansas City}$, $\textsf{Kansas})$ & 0 & 0 & 0 & 0 & N \\
+$(\textsf{Albany}$, $\textsf{New York})$ & 2 & 2 & 0 & 0 & Y\\
+$(\textsf{Sacramento}$, $\textsf{California})$ & 10 & 10 & 2 & 2 & Y\\
+$(\textsf{Houston}$, $\textsf{Texas})$ & 0 & 0 & 0 & 0 & N \\
+    \end{tabular}
+}
+    \label{tab:x_example}
+\end{table*}
+
+
+%The difference between meta path and predicate path is that meta path preserves the entity types and predicate types whereas predicate path contains predicates only. Does keeping entity types always a good idea in fact checking? Our conclusion is
+
+%In literature, meta path often used as hand annotated features in link prediction, clustering, and classification whereas synonym predicate paths are the product of association rule mining algorithm given an interested predicate path. 
+
+%Although meta paths, predicate paths and association rules are widely used in heterogeneous information network (HIN) mining, few models employ fact checking as a method of comparison. 
+
+As introduced in the previous section, the presence of entity types in meta paths may sometimes be redundant and can typically be inferred by the predicate if there is no ambiguity. For example in DBLP~\cite{Ley2009}, $\textsf{writtenBy}$ always refers to $\{\textsf{paper}\}\xrightarrow{\textsf{writtenBy}}\{\textsf{author}\}$, and \textsf{cite} always connects two \textsf{paper}s. In such cases, meta path can be converted into predicate path without ambiguity.
+
+In more complex knowledge graphs, such as DBpedia~\cite{Lehmann2014} and SemMedDB~\cite{Kilicoglu2012} in which a predicate can be paired with multiple endpoints with different type-labels, the type of the endpoint entity can not be certainly inferred by predicate alone. For example, the entities that are connected by predicate \textsf{authorOf} can be either \{\textsf{writer}\}$\leadsto$\{\textsf{book}\} or \{\textsf{lyricist}\}$\leadsto$\{\textsf{song}\}. Aside from improving extraction performance, one added benefit of the meta path traversal extraction algorithm (described in the previous section) is that we limit the type-scope of the endpoints by requiring them to match the given subject and object types, $\mathbf{o}_s$ and $\mathbf{o}_t$, exactly. As an example, using the given fact statement (\textsf{writer}, \textsf{authorOf}, \textsf{book}), the meta paths we extract are between \{\textsf{writer}\}$\leadsto$\{\textsf{book}\} rather than \{\textsf{lyricist}\}$\leadsto$\{\textsf{song}\}.
+
+Intuitively, the use of more tightly constrained meta paths instead of predicate paths ought to increase the information richness leading to better results, but our initial trials showed that: 1) the use of meta paths significantly increased the number of features in a fact checking model without any noticeable improvement in performance, and 2) the inclusion of noisy entity types from meta paths actually lowers the occurrence-rate of important meta paths resulting in lower discriminative power in the resulting set of paths. A detailed discussion of these counter-intuitive results are provided in the experiment section.
+
+Because of the issues raised above, in this work we use predicate paths as defined in Defn.~\ref{def:predicate_path} that are anchored by their starting and ending entity-types:
+
+\begin{definition} \label{def:anchored_predicate_path}
+\textbf{Anchored Predicate Path}. Given a $k$-length meta path $\Pi^{k}$, the anchored predicate path $P$ is defined as the corresponding directed, typed sequence of edges with typed-endpoints $P^{k} = \textbf{o}_1\xrightarrow{p_1}\xrightarrow{p_2}\ldots\xrightarrow{p_{k-1}}\textbf{o}_k$.
+\end{definition}
+
+Note that we use the term ``predicate path'' and the notation $P$ to denote an anchored predicate path and $\mathbf{P}$ to denote a set of anchored predicate paths throughout the remainder of this work. 
+
+At this point, our framework will have gathered several predicate paths, some of which may be helpful while others may be unhelpful or spurious. Next, we calculate the importance of each extracted predicate path for inclusion into a final regression model.
+
+
+\begin{table*}[t]
+    \centering
+    \caption{Top discriminative paths defining \textsf{capitalOf}, ordered by $\mathbf{w}$.}
+
+\resizebox{0.95\textwidth}{!}{
+    \begin{tabular}{c | c | c | c}
+    Rank  & Meta Path $\mathbf{\Pi}$ & Predicate Path $\mathbf{P}$ & Predicate Path $\mathbf{P}^*$\\
+    \hline
+    1 & $\{\textsf{city},\textsf{settlement}\} \xrightarrow{\textsf{location}^{-1}} \{\textsf{state agency}\} \xrightarrow {\textsf{location}} \{\textsf{state}\}$ & $\langle\textsf{headquarter}^{-1}, \ \textsf{jurisdiction}\rangle$ & $\langle\textsf{headquarter}^{-1}, \ \textsf{jurisdiction}\rangle$\\
+    
+    2 & $\{\textsf{city},\textsf{settlement}\} \xrightarrow{\textsf{deathPlace}^{-1}} \{\textsf{person}\} \xrightarrow {\textsf{deathPlace}} \{\textsf{state}\}$ & $\langle\textsf{location}^{-1}, \ \textsf{jurisdiction}\rangle$ & $\langle\textsf{location}^{-1}, \ \textsf{jurisdiction}\rangle$\\
+    
+    3 & $\{\textsf{city},\textsf{settlement}\} \xrightarrow{\textsf{headquarter}^{-1}} \{\textsf{state agency}\} \xrightarrow {\textsf{jurisdiction}} \{\textsf{state}\}$ & $\langle\textsf{headquarter}^{-1}, \ \textsf{regionServed}\rangle$ & $\langle\textsf{garrison}^{-1}, \ \textsf{country}\rangle$\\
+    
+    4 & $\{\textsf{city},\textsf{settlement}\} \xrightarrow{\textsf{location}^{-1}} \{\textsf{state agency}\} \xrightarrow {\textsf{jurisdiction}} \{\textsf{state}\}$ & $\langle\textsf{garrison}^{-1}, \ \textsf{country}\rangle$ & $\langle\textsf{headquarter}^{-1}, \ \textsf{parentOrganisation}\rangle$ \\
+    
+    5 & $\{\textsf{settlement}\} \xrightarrow{\textsf{location}^{-1}} \{\textsf{state agency}\} \xrightarrow {\textsf{jurisdiction}} \{\textsf{state}\}$ & $\langle\textsf{deathPlace}^{-1}, \ \textsf{deathPlace}\rangle$ & $\langle\textsf{location}^{-1}, \ \textsf{parentOrganisation}\rangle$ \\
+
+    \end{tabular}
+}
+    \label{tab:disc_path}
+\end{table*}
+
+
+
+\subsection{Path Selection} \label{sec:path_selection}
+
+In this section we describe the procedure used to find the most discriminative predicate paths from predicate path sets $\mathbf{P}^{+}$ and $\mathbf{P}^{-}$ obtained from the previous section.% With $\mathbf{P}^{k}_{(\mathbf{o}_u, \mathbf{o}_v)}$, one can interpret the query or perform fact checking using the discriminative path.
+
+For this we use $\mathbf{X}$ to denote an $n \times m$ training instance matrix, wherein the $i^{\textrm{th}}$ row in $\mathbf{X}$ represents a training instance from a pair of alternate endpoints $u$ and $v$ such that $\mathbf{o}_u=\mathbf{o}_s$ and $\mathbf{o}_v=\mathbf{o}_t$. The $j^{\textrm{th}}$ column in $\mathbf{X}$ represents the number of actual paths in $\mathcal{P}$ that match the predicate path $P_j\in \mathbf{P} = \mathbf{P}^{+} \cup \mathbf{P}^{-}$. Class labels are denoted by $y_i$. The goal of path selection is to create a new $n \times m^\prime$ matrix $\mathbf{X^\prime}$, where $m^\prime$ contains only the paths/features with the most discriminative power, This is achieved by the following feature selection function:
+
+\begin{equation}
+\begin{split}
+f(\mathbf{X},\mathbf{w},\delta) = \mathbf{X}_{1:n, \{ j | j \in 1:m, w_j \geq \delta \}},
+\end{split}
+\end{equation}
+
+\noindent where $\mathbf{X}$ is the original $n \times m$ training matrix with feature set $\mathbf{P}=\mathbf{P}^{+} \cup \mathbf{P}^{-}$, $\mathbf{w}$ is an $m$-dimensional feature importance vector, and $\delta$ is an importance threshold. Table~\ref{tab:x_example} shows the actual counts of predicate paths anchored at various endpoints as cell values.
+
+The importance $w_j\in\mathbf{w}$ of a predicate path $P_j\in\mathbf{P}$ is measured using the information gain of $\mathbf{X}_{:,j}$ and $\mathbf{y}$:
+
+\begin{equation}
+\begin{split}
+I(\mathbf{X}_{:,j}:\mathbf{y}) = &
+\sum_{x_{i,j} \in \mathbf{X}_{:,j}} \sum_{y_i \in \mathbf{y}} p(x_{i,j})p(y_i) \\
+&  \log \left (\frac{p(x_{i,j},y_i)}{p(x_{i,j})p(y_{i})} \right ),
+\end{split}
+\end{equation}
+
+\noindent where $\mathbf{X}_{:,j}$ denotes the column vector of feature $j$, $\mathbf{y}$ represents the corresponding label vector, and $x_{i,j}$ is the data value of the datum at $\mathbf{X}_{i,j}$~\cite{Quinlan2014}. 
+
+In order to reduce the rank of $\mathbf{X}$ we use a $\delta$ threshold value. $\delta$ can be set by multiple methods: 1) empirically via cross-validation, or 2) by a top-$k$ or top-$k\%$ cut-off score of $\mathbf{w}$. Among the alternatives we chose $\delta$ empirically in order to generate $\mathbf{X^\prime}$ in our evaluation.
+
+%\subsection{Fact Validation} \label{sec:fact_validation}
+
+With the discriminative predicate paths extracted, pruned and represented in $\mathbf{X}$, the original statement of fact is validated via logistic regression:
+
+\begin{equation}
+\begin{split}
+    p(y_i = 1) = \frac{e^{\beta_0 + \mathbf{X}^\prime_{i,:}\beta}}{1 + e^{\beta_0 + \mathbf{X}^\prime_{i,:}\beta}} \ ,
+\end{split}
+\end{equation}
+
+\noindent where $\mathbf{X}^\prime_{i,:}$ and $y_i$ denotes the input feature vector and the class label of instance $i$ respectively, and $\beta$ represents the learned regression coefficients~\cite{Murphy2012}.
+
+% LOGISTIC REGRESSION MODEL HERE
+
+% And explanation
+\subsection{Fact Interpretation} \label{sec:fact_interpertation}
+
+%In previous section we have discussed the fact validation phase using discriminative predicate path set $\mathbf{P}^{k}_{(\mathbf{o}_u,\mathbf{o}_v)}$ and logistic regression. In this section, we will explain how to extract a subset of discriminative predicate paths that describes the key properties of the given statement from $\mathbf{P}^{k}_{(\mathbf{o}_u,\mathbf{o}_v)}$ .
+
+Although the discriminative meta paths are used for fact checking, there is no guarantee that all of the predicate paths $P \in \mathbf{P}$ actually describe intuitive or important attributes of the given statement of fact. For example, the fact checking model trained with the statement of fact (\textsf{Springfield}, \textsf{capitalOf}, \textsf{Illinois}) contains many spurious predicate paths like $\langle\textsf{location}^{-1}, \textsf{location}\rangle$ and $\langle\textsf{deathPlace}^{-1}, \\ \textsf{deathPlace}\rangle$. These predicate paths indicate that ``the capital is located in the state'' and that ``a city is the death place of a person who died in that state'', which are indeed accurate in their respective instances, but not very descriptive of what \textsf{capitalOf} actually means. Although these supportive predicate paths seem superfluous they may actually be used to help identify false statements, according on their learned regression weights. However, these spurious statements should probably not be included in any ``definition'' of a given fact; instead, we want human-interpretable definitions to consist of only the most important predicates.
+
+% Find a negative path
+
+In order to extract a subset of discriminative predicate paths $\mathbf{P}^{*}\subset \mathbf{P}$ that describe the key properties of the provided statement, we need to 1) find the important predicate paths, and then 2) remove all unnecessary and verbose predicate paths. 
+
+For example, the $\langle\textsf{headquarter}^{-1}, \ \textsf{jurisdiction}\rangle$ condition in Tab.~\ref{tab:disc_path} is important to the definition of \textsf{capitalOf} because very few other predicates are associated with this predicate path. On the other hand, the $\langle\textsf{deathPlace}^{-1}, \ \textsf{deathPlace}\rangle$ condition in Tab.~\ref{tab:disc_path} is associated with many other predicates and should therefore not be ranked ahead of predicate paths that have more discriminative power. What we need to do is find those important discriminative predicate paths that define \emph{only} the predicate in question.
+
+
+To do this, we sort all $P \in \mathbf{P}$ by the importance vector $\mathbf{w}$ we obtained by calculating the information gain earlier, that is, we construct an ordered list $P_x \prec P_y \prec \ldots$, where $w_x \geq w_y$.
+
+After ordering the predicate paths, we remove unnecessary and verbose predicate paths by
+\begin{equation}
+\mathbf{P}^* = \{ P | P \in \mathbf{P} \setminus \{ P_j | P_j \in \mathbf{P}^-, \sum_{i=0}^{i=n}\mathbf{X}_{i,j} \geq \theta \} \},
+\end{equation}
+
+\noindent where $\theta$ is an importance threshold chosen empirically and varied between 10 and 20. As a result of this function, the set of important discriminative predicate paths $\mathbf{P}^*$ contains the most specific definers of the provided predicate. The top 5 discriminative predicate paths for \textsf{capitalOf} are illustrated in Tab.~\ref{tab:disc_path}.
+
+%we first reduced the candidate predicate path set $\mathbf{P}$ to $\mathbf{P}^{k}_{(\mathbf{o}_u,\mathbf{o}_v)} \setminus (\mathbf{P}^+ \cup \mathbf{P}^-)$, where all negative predicate path were removed. Then we reordered the remained paths and selected the top predicate paths as the interpretation of a fact. We reused the path importance $\mathbf{w}$ calculated in Section~\ref{sec:path_selection} for simplicity. 
+
+
+
+\section{Experiments} \label{sec:experiment}
+
+
+
+In this section we report the results of two tasks: 1) fact checking and 2) definition interpretation using thousands of fact statements from eight different test cases on two large, real world knowledge graphs DBpedia~\cite{Lehmann2014} and SemMedDB~\cite{Kilicoglu2012}. Before we present the results, we describe the datasets, alternative approaches and the experimental setup.
+
+\subsection{Data Set}
+
+The fact checking model requires a knowledge graph as input. For these experiments we generated two large heterogeneous information networks from two widely used knowledge bases. In order to construct a heterogeneous multigraph from each knowledge base, we converted each RDF triple (\textsf{subject}, \textsf{predicate}, \textsf{object}) into a directed edge $\textsf{subject} \xrightarrow{\textsf{predicate}} \textsf{object}$ in $\mathcal{G}$, we further combined entities with same name or identifier into a single entity node in the final knowledge graph. The statistics of two resulting knowledge graphs are shown in Tab.~\ref{tab:stat}.
+
+\vspace{5pt}\noindent{\textbf{DBpedia}}. DBpedia is a community project which converts facts extracted from Wikipedia into knowledge base triples that follow Semantic Web and Linked Data standards. The resultant knowledge base is split into several components such as infobox-facts (\ie, $(s,p,t)$), and entity type mappings (\ie, $\psi(u) = \mathbf{o}_u$).
+
+From this knowledge base, we use the infobox-facts and article ontology from the April 2014 DBpedia knowledge base to create nodes and edges. We did not include article content, such as text and hyperlinks, in the knowledge graph because it was not the focus of this work.
+
+The constructed graph has $4.7$ million entity nodes, $27$ million predicate edges, $671$ predicate types and $451$ entity-types. $1.1\%$ of the entities in this graph have no type-label and $69.9\%$ of the entities have more than one type-label.
+
+\vspace{5pt}\noindent{\textbf{SemMedDB}}. The Semantic MEDLINE Database contains $82$ million triples extracted from biomedical text using the SemRep extractor~\cite{Rindflesch2003}. Unlike DBpedia, which does not have duplicate triples, SemMedDB contains a large number of duplicate records and uses the amount of duplication as a measure of credibility. For example, an incorrect statement (\textsf{Chicago}, \textsf{isA}, \textsf{country}) appears only once in the SemMedDB knowledge base, while the correct statement (\textsf{Chicago}, \textsf{isA}, \textsf{city}) appears 10 times. Interestingly, although there are $82$ million edges in SemMedDB, only $20.9\%$ of the edges are unique.
+
+We use the June 2012 version of SemMedDB and translate it to a knowledge graph in the same way as with DBpedia. We do not remove any duplicate edges because comparable algorithms often work better on multigraphs; Adamic/Adar, for example, may leverage duplicate edge information to improve accuracy. 
+
+The resulting knowledge graph has $282,934$ entity nodes, $82$ million edges, $58$ predicate types, and $132$ entity types. $0.05\%$ of the entity nodes have no type-labels and $26.1\%$ of entity nodes have more than one type-label.
+
+\begin{table}[t]
+    \centering
+    \caption{Statistics of knowledge graph datasets.}
+    \resizebox{0.47\textwidth}{!}{
+        \begin{tabular}{c|r r r r r r}
+         \multicolumn{1}{c|}{$\mathcal{G}$} & \multicolumn{1}{c}{$|\mathcal{V}|$} & \multicolumn{1}{c}{$|\mathcal{E}|$} & \multicolumn{1}{c}{$|\mathcal{R}|$} & \multicolumn{1}{c}{$|\mathcal{O}|$} & \multicolumn{1}{c}{$|\mathbf{o}| = 0$} & \multicolumn{1}{c}{$|\mathbf{o}| > 1$}\\\hline
+         DBpedia~\cite{Lehmann2014}   & 4,743,012 & 27,313,477 & 671 & 451 & 524,889 & 3,313,257 \\
+         SemMedDB~\cite{Kilicoglu2012}  & 282,934   & 82,239,653 & 58  & 132 &     137 & 73,936 \\ 
+        \end{tabular}
+    }
+    \label{tab:stat}
+\end{table}
+
+\subsection{Experiment Setting}
+
+We view the fact checking task as a type of link prediction problem because a fact statement $(s,p,t)$ can be naturally considered as an edge $s\xrightarrow{p}t$ in a given knowledge graph $\mathcal{G}$. The probability that an unknown statement of fact $s\xrightarrow{p}t$ is true is equivalent to the probability that the edge $s\xrightarrow{p}t$ is missing in $\mathcal{G}$. To test the ability of our method to validate missing facts, we remove all edges labelled by the given predicate $p$ and perform fact checking on the modified multigraph $\mathcal{G}^\prime$ where $p\notin \mathcal{G}^\prime=\{ \mathcal{V}, \mathcal{E}^\prime \mathcal{R}^\prime, \mathcal{O}\}$. 
+
+All experiments are performed using 10-fold cross validation. The source code of our method and the comparison algorithms, including data preprocessing tools, can be found at \url{https://github.com/nddsg/KGMiner}.
+
+
+We compared our fact checking algorithm with 8 alternative approaches including Adamic/Adar (AA)~\cite{Adamic2003}, Preferential Attachment (PA)~\cite{Barabasi1999}, Katz~\cite{Katz1953}, Semantic Proximity (SP)~\cite{Ciampaglia2015}, personalized PageRank (PPR)~\cite{Haveliwala2002}, SimRank~\cite{Jeh2002}, Path-Constrained Random Walk (PCRW)~\cite{Lao2010}, and AMIE~\cite{Galarraga2013}.
+
+For a given node pair $(u,v)$, we calculate the scores of aforementioned methods as follows:
+%\begin{equation*}
+%\begin{split}
+$$score_{aa}(u,v) =\sum_{\{x | (u,x)\in \mathcal{E}, (x,v) \in \mathcal{E}\}}\frac{1}{log(|\Gamma(x)|)},$$
+$$score_{pa}(u,v) =|\Gamma(u)| \times |\Gamma(v)|,$$
+$$score_{katz}(u,v) =\sum_{i=1}^{k}\beta^i|\textrm{path}^i{(u,v)}|,$$
+$$score_{sp}(u,v) = \max \left( \frac{1}{1 + \sum_{i=2}^{k-1}log(|\Gamma(x_i)|)} \right),$$
+$$score_{ppr}(u,v) = d\delta_{u,v} + (1-d)\sum_{(x,v)\in\mathcal{E}}\frac{score_{ppr}(u,x)}{|\Gamma^+(x)|},$$
+%\end{split}
+%\end{equation*}
+
+\noindent{}where $\Gamma(x)$ denotes the neighborhood set of an entity $x$, $k$ represents the path length, and is set to $k=3$ throughout these experiments; $\beta$ is a parameter $> 0$ that we set to $\beta=0.05$ as recommended by Kleinberg and Liben-Nowell~\cite{Kleinberg2007}; $\textrm{path}^i(u,v)$ is a set of homogeneous paths connecting $u\leadsto v$ within length $i$; $d$ represents the PageRank damping factor, and is set to $d=0.15$, $\delta_{u,v}$ is the indicator function of $u=v$, and $\Gamma^+(x)$ denotes out-going neighbors of $x$.
+
+In order to run SimRank on the large knowledge graphs, we implemented Kusumoto and Maehara's SimRank approximation~\cite{Kusumoto2014} with $c=0.8$, $T=100$ and $R=10^4$ set according to the values in their original work.
+
+Note that although AMIE is designed for association rule mining, in this work we employ it as a link prediction method by assuming that the given statement of fact $(s,p,t)$ is true if and only if at least one association rule found by AMIE connects $s$ and $t$ in the graph $\mathcal{G}^\prime$. 
+
+As for meta path based methods, such as PCRW, we use the association rule mined by AMIE as the input rather than hand-labeled meta paths. We chose to use AMIE instead of the discovered meta paths from Meng {\em et al.}~\cite{Meng2015} because the implementation of AMIE is public available. Unfortunately, PathSim~\cite{Sun2011} requires input meta paths to be symmetric, \ie, $a\rightarrow b\rightarrow a$ or $a\rightarrow b\rightarrow c\rightarrow b\rightarrow a$, but the rules mined by AMIE are very rarely symmetric in our test cases because the $(s,p,t)$ endpoints typically have different entity-type labels; therefore we cannot compare our method with PathSim and other symmetric-only algorithms.
+
+Due to the large size of the knowledge graphs, it is impractical to run AMIE to completion. In these experiments, we executed AMIE for $2,690$ CPU hours on DBpedia and $1,190$ CPU hours on SemMedDB. The number of AMIE-mined rules on the knowledge graphs is $1,326$ and $5,188$ respectively.
+
+\subsection{Test Cases} \label{sec:test_case}
+
+Here we briefly describe the test cases we use for fact checking. Each test case is constructed to be as difficult as possible.
+
+\vspace{5pt}\noindent{\textbf{CapitalOf \#1}}. Check the capital of a US state. In this task we check $\{\textsf{city}\}\xrightarrow{\textsf{capitalOf}}\{\textsf{state}\}$ for the top 5 most populous cities in all 50 US states. In 9 instances the capital city is not in the set of top 5 most populous cities of a state, in these cases we further include the capital city in the test set thereby checking a total of $5\times 50 + 9=259$ statements of fact with 50 true instances, and 209 false instances.
+
+\vspace{5pt}\noindent{\textbf{CapitalOf \#2}}. Check the capital of a US state. In this task we check $\{\textsf{city}\}\xrightarrow{\textsf{capitalOf}}\{\textsf{state}\}$ by creating 200 incorrect random matchings of capitals to states. For example, we check if Springfield, the actual capital of Illinois, is the capital of 4 other states. This random assignment results 250 statements of fact with 50 true instances and 200 false instances.
+
+\vspace{5pt}\noindent{\textbf{US Civil War}}. Check the commander of a US Civil War battle. In this task we check $\{\textsf{person}\}\xrightarrow{\textsf{commanderOf}}\{\textsf{battle}\}$ by creating 584 incorrect random matchings of civil war commanders to civil war battles, as well as 126 true statements about the Union and Confederate commanders of Class A (\ie, decisive) US Civil War battles. 
+
+\vspace{5pt}\noindent{\textbf{Company CEO}}. Check CEO of a company. In this task we check $\{\textsf{person}\}\xrightarrow{\textsf{keyPerson}}\{\textsf{company}\}$ by creating 1025 incorrect random matchings of CEOs to companies, as well as true statements about the CEOs of the 205 notable companies in the Wikipedia \textsf{List of chief executive officers}. 
+
+\vspace{5pt}\noindent{\textbf{NYT Bestseller}}. Check author of a book. In this task we check $\{\textsf{person}\}\xrightarrow{\textsf{author}}\{\textsf{book}\}$ by creating 465 incorrect random pairs of authors to books, as well as true statements about the 63 authors who wrote 93 books that appeared on the New York Times bestseller list between 2010-2015.
+
+\vspace{5pt}\noindent{\textbf{US Vice-President}}. Check vice president of a president. In this task we check $\{\textsf{person}\}\xrightarrow{\textsf{vicePresidentOf}}\{\textsf{person}\}$ by creating 227 incorrect pairs vice-presidents to presidents, as well as true statements about the 47 vice-presidents of the United States.
+
+\vspace{5pt}\noindent{\textbf{Disease}}. Check if amino acid, peptide, or protein causes a disease or syndrome. In this task we check $\{\textsf{aapp}\}\xrightarrow{\textsf{causes}}\{\textsf{dsyn}\}$ where \textsf{aapp} and \textsf{dsyn} are types in SemMedDB corresponding to amino acid, peptide, or protein and disease or syndrome respectively. We do this by creating 457 incorrect statements, as well as 100 true statements.
+
+
+\vspace{5pt}\noindent{\textbf{Cell}}. Check if a gene causes a certain cell function. In this task we check $\{\textsf{gngm}\}\xrightarrow{\textsf{causes}}\{\textsf{celf}\}$ where \textsf{gngm} and \textsf{celf} are types in SemMedDB corresponding to gene or genome and cell function respectively. We do this by creating 435 incorrect statements, as well as 99 true statements.
+
+These eight test cases listed above represent a $20/80$ true to false label split of instances. We will experiment with different label ratios in later experiments.
+
+\begin{figure}[t]
+    \subfloat{
+      \includegraphics[width=0.24\textwidth]{./figs/meta_predicate/dbpedia_metapath_predicate_roc}
+      \label{fig:metapath_predicatepath_roc}
+    }
+    \subfloat{
+      \includegraphics[width=0.24\textwidth]{./figs/meta_predicate/dbpedia_metapath_predicate_fmeasure}
+      \label{fig:metapath_predicatepath_fmeasure}
+    }\vspace{-1em}
+    \quad
+    \centering
+    \subfloat{
+        \centering
+        \includegraphics[width=0.30\textwidth]{./figs/meta_predicate/predicate_metapath_legend}
+    }
+    \caption{Fact-checking performance on DBpedia. Solid and hollow symbols denote original and selected best performance subset respectively. This figure demonstrates that anchored predicate paths contain fewer features but have similar performance compared to sets of meta paths. Top left is better.}
+    \label{fig:metapath_predicatepath}
+\end{figure}
+
+\subsection{Predicate Path Analysis}
+
+\begin{table*}[t]
+    \centering
+    \caption{ Result of fact checking test cases. The score is the area under ROC curve score computed by logistic regression with 10-fold cross validation. $^*$ means the value is missing due to the large size of feature set (Section~\ref{sec:metapath_predicatepath}). All test cases are explained in Sec.~\ref{sec:test_case}.}
+
+\resizebox{\textwidth}{!}{
+    \begin{tabular}{l | c c c c c c c c}
+    \hline
+        Algorithm  & CapitalOf \#1 & CapitalOf \#2 & Company CEO & NYT Bestseller & US Civil War & US Vice-President & Disease & Cell\\ 
+    \hline
+        Adamic/Adar~\cite{Adamic2003}  & $0.387$ & $0.962$  & $0.665$ & $0.650$ & $0.642$ & $0.795$ & $0.671$ & $0.755$\\
+        Semantic Proximity~\cite{Ciampaglia2015} & $0.706$ & $0.978$ & $0.614$ & $0.641$ & $0.582$ & $0.805$ & $0.871$ & $0.840$\\
+        Preferential Attachment~\cite{Barabasi1999} & $0.396$ & $0.516$ & $0.498$ & $0.526$ & $0.599$ & $0.474$ & $0.563$ & $0.755$\\
+        Katz~\cite{Katz1953} & $0.370$ & $0.976$ & $0.600$ & $0.623$ & $0.585$ & $0.791$ & $0.763$ & $0.832$ \\
+        SimRank~\cite{Jeh2002} & $0.553$ & $0.976$ & $\mathbf{0.824}$ & $\mathbf{0.695}$ & $0.685$ & $0.912$ & $0.809$ & $0.749$ \\
+        AMIE~\cite{Galarraga2013} & $0.550$ & $0.500$ & $0.669$ & $0.520$ & $0.659$ & $0.987$ & $0.889$ & $0.898$ \\
+        Personalized PageRank~\cite{Haveliwala2002}  & $0.535$ & $0.535$ & $0.579$ & $0.529$ & $0.488$ & $0.683$ & $0.827$ & $0.885$ \\
+        Path-Constrained Random Walk~\cite{Lao2010} & $0.550$ & $0.500$ & $0.542$ & $0.486$ & $0.488$ & $0.672$ & $0.911$ & $0.765$ \\
+    \hline
+    %Our methods
+        \textbf{Discriminative Predicate Path ($\mathbf{P}$) Count} & $0.920$ & $\mathbf{0.999}$ & ${0.747}$ & $0.664$ & $0.749$ & $0.993$ & $\mathbf{0.941}$ & $\mathbf{0.928}$\\
+        \textbf{Discriminative Meta Path ($\mathbf{\Pi}$) Count} & $\mathbf{0.940}$ & $0.998$ & $0.731$ & $0.674$ & $\mathbf{0.772}$ & $\mathbf{0.995}$ & $*$ & $*$ \\
+    \hline
+    \end{tabular}
+}
+    %\end{adjustbox}
+    \label{tab:datasets}
+\end{table*}
+
+\ignore{
+\begin{table*}[t]
+    \centering
+    \caption{Top discriminative paths found by proposed method that are missing in AMIE.}
+    \resizebox{0.69\textwidth}{!}{
+        \begin{tabular}{c|r c l}
+        %\hline
+        Task & & Top Discriminative Path Missed by AMIE &\\
+        \hline
+        CapitalOf \#1 & \textsf{city} & \begin{tabular}{c}
+                $\langle\textsf{headquarter}^{-1}, \textsf{jurisdiction}\rangle$\\
+                $\langle\textsf{location}^{-1}, \textsf{jurisdiction}\rangle$ \\
+                \end{tabular} & \textsf{state} \\
+        \hline
+        CapitalOf \#2 & \textsf{city} & \begin{tabular}{c}
+                    $\langle\textsf{location}^{-1},\textsf{location}\rangle$ \\
+                    $\langle\textsf{isPartOf}\rangle$ \\
+                    \end{tabular} & \textsf{state} \\
+        \hline
+        Company CEO & \textsf{person} & \begin{tabular}{c}
+                $\langle\textsf{employer}\rangle$\\
+            \end{tabular} & \textsf{company} \\
+        \hline
+        US Civil War & \textsf{person} & \begin{tabular}{c}
+                        $\langle\textsf{notable commander}^{-1},\textsf{takePartIn}\rangle$ \\
+                    \end{tabular} & \textsf{battle}\\
+        \hline
+        NYT Bestseller & \textsf{person} & \begin{tabular}{c c}
+                            $\langle\textsf{notable work},\textsf{previous work}\rangle$ \\ 
+                            $\langle\textsf{notable work},\textsf{subsequent work}\rangle$ \\
+                         \end{tabular} & \textsf{book} \\ 
+        \hline
+        US President   & \textsf{vice president} & \begin{tabular}{c}
+                                $\langle\textsf{successor},\textsf{president}^{-1}\rangle$ \\
+                          \end{tabular} & \textsf{president}\\ 
+       \hline
+       Disease & \textsf{aapp} & \begin{tabular}{c}
+                                $\langle\textsf{associatedWith},\textsf{isA}\rangle$ \\
+                                $\langle\textsf{stimulates},\textsf{affects}\rangle$ \\
+                          \end{tabular} & \textsf{dsyn} \\ 
+                          
+     \hline
+      Cell & \textsf{gngm} & \begin{tabular}{c}
+                $\langle\textsf{comparedWith},\textsf{negativeAssociatedWith}\rangle$ \\
+            \end{tabular} & \textsf{celf} \\
+    \end{tabular}
+    }
+    \label{tab:missed_path}
+\end{table*}
+}
+
+\begin{figure*}[t]
+    \addtocounter{subfigure}{-1}
+    \subfloat{
+      \centerline{\includegraphics[width=0.7\textwidth]{./figs/robustness/robustness_legend}}
+    }\vspace{-1em}
+    \quad
+    \centering
+    \subfloat[][CapitalOf \#1]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/city_capital}
+      \label{fig:robustness_capital}
+    }
+    \centering
+    \subfloat[][CapitalOf \# 2]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/capital_state}
+      \label{fig:robustness_state_capital}
+    }
+    \centering
+    \subfloat[][Company CEO]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/company_president}
+      \label{fig:robustness_company_president}
+    }
+    \centering
+    \subfloat[][NYT Bestseller]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/nyt_bestseller}
+      \label{fig:robustness_nyt_bestseller}
+    }
+    \quad
+    \centering
+    \subfloat[][US Civil War]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/civil_war}
+      \label{fig:robustness_civil_war}
+    }
+    \centering
+    \subfloat[][US Vice-President]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/uspresident}
+      \label{fig:robustness_us_president}
+    }
+    \centering
+    \subfloat[][Disease]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/aapp_dsyn}
+      \label{fig:robustness_disease}
+    }
+    \centering
+    \subfloat[][Cell]{
+      \includegraphics[width=0.23\textwidth]{./figs/robustness/gngm_celf}
+      \label{fig:robustness_cellfunction}
+    }
+    \caption{Fact checking performance with different true to false ratio of labeled data.}
+    \label{fig:robustness}
+\end{figure*}
+
+\begin{table*}[t]
+    \centering
+    \caption{Top discriminative paths $\mathbf{P}^*$ found by proposed method. $^\dag$ are important discriminative predicate paths that are missed by AMIE.}
+    \resizebox{0.95\textwidth}{!}{
+        \begin{tabular}{c c |r c l}
+        %\hline
+        Task & Statement & & Top Discriminative Paths &\\
+        \hline
+        CapitalOf \#1 & $\{\textsf{city}\}\xrightarrow{\textsf{capitalOf}}\{\textsf{state}\}$ & \{\textsf{city}\} & \begin{tabular}{c}
+                $\langle\textsf{headquarter}^{-1}, \textsf{jurisdiction}\rangle^\dag$\\
+                $\langle\textsf{location}^{-1}, \textsf{jurisdiction}\rangle^\dag$ \\
+                \end{tabular} & \{\textsf{state}\} \\
+        \hline
+        CapitalOf \#2 & $\{\textsf{city}\}\xrightarrow{\textsf{capitalOf}}\{\textsf{state}\}$ & \{\textsf{city}\} & \begin{tabular}{c}
+                    $\langle\textsf{location}^{-1},\textsf{location}\rangle^\dag$ \\
+                    $\langle\textsf{isPartOf}\rangle^\dag$ \\
+                    \end{tabular} & \{\textsf{state}\} \\
+        \hline
+        Company CEO & $\{\textsf{person}\}\xrightarrow{\textsf{keyPerson}}\{\textsf{company}\}$ & \{\textsf{person}\} & \begin{tabular}{c}
+                $\langle\textsf{occupation}\rangle$\\
+                $\langle\textsf{foundedBy}^{-1}\rangle$\\
+                $\langle\textsf{employer}\rangle^\dag$\\
+            \end{tabular} & \{\textsf{company}\} \\
+        \hline
+        US Civil War & $\{\textsf{person}\}\xrightarrow{\textsf{commanderOf}}\{\textsf{battle}\}$ & \{\textsf{person}\} & \begin{tabular}{c}
+                        $\langle\textsf{battle}\rangle$\\
+                        $\langle\textsf{notable commander}^{-1},\textsf{battle}\rangle^\dag$ \\
+                    \end{tabular} & \{\textsf{battle}\}\\
+        \hline
+        NYT Bestseller & $\{\textsf{person}\}\xrightarrow{\textsf{author}}\{\textsf{book}\}$ & \{\textsf{person}\} & \begin{tabular}{c c}
+                            $\langle\textsf{notable work}\rangle$ \\
+                            $\langle\textsf{notable work},\textsf{series}^{-1}\rangle^\dag$ \\ 
+                         \end{tabular} & \{\textsf{book}\} \\ 
+        \hline
+        US Vice-President  & $\{\textsf{person}\}\xrightarrow{\textsf{vicePresidentOf}}\{\textsf{person}\}$ & \textsf{person} & \begin{tabular}{c}
+                        $\langle\textsf{president}^{-1}\rangle$ \\
+                        $\langle\textsf{successor}\rangle$ \\
+                    $\langle\textsf{successor},\textsf{president}^{-1}\rangle^\dag$ \\
+                          \end{tabular} & \{\textsf{person}\}\\ 
+       \hline
+       Disease  & $\{\textsf{aapp}\}\xrightarrow{\textsf{causes}}\{\textsf{dsyn}\}$ & \{\textsf{aapp}\} & \begin{tabular}{c}
+                                        $\langle\textsf{affects}\rangle^\dag$ \\
+                                                       $\langle\textsf{augments}\rangle$ \\
+ %$\langle\textsf{associatedWith}\rangle^\star$ \\
+                          \end{tabular} & \{\textsf{dsyn}\} \\ 
+                          
+     \hline
+      Cell  & $\{\textsf{gngm}\}\xrightarrow{\textsf{causes}}\{\textsf{celf}\}$ & \{\textsf{gngm}\} & \begin{tabular}{c}
+                $\langle\textsf{associatedWith},\textsf{locationOf}\rangle^\dag$ \\                $\langle\textsf{associatedWith},\textsf{associatedWith}^{-1}\rangle^\dag$ \\
+
+            \end{tabular} & \{\textsf{celf}\} \\
+    \end{tabular}
+    }
+    \label{tab:missed_path}
+\end{table*}
+
+
+Earlier we argued in favor of anchored predicate paths over the use of meta paths. Recall that the reasoning behind this choice is that the anchored predicate paths are less restrictive than meta paths, which require one or more type-labels for every entity in the path, whereas anchored predicate paths only require type-labels for entities on the endpoints of the path.
+
+%As evidence to support our hypothesis about the the advantages of predicate paths instead of meta paths, we still include the test result of meta paths in the table to demonstrate the performance difference. The experiment shows the AUROC score of the proposed method outperforms alternative approaches.
+
+%Although such problem may be solved by merging meta paths with similar entity types at some level, choosing similarity metrics and determining the threshold are not straightforward and are not the focus of this paper. 
+
+Figure~\ref{fig:metapath_predicatepath} shows the results of a comparison between meta paths $\mathbf{\Pi}$ and discriminative anchored predicate paths $\mathbf{P}$ on the 6 DBpedia tasks. We find that the performance of anchored predicate paths (solid circle) are comparable to meta paths (solid square) despite having a much smaller feature set.
+
+We also constructed a subset of meta paths and anchored predicate paths by computing the information gain of each path, sorting by the information gain and chosing the top $k$ that maximizes the area under the receiver operator characteristic (AUROC) score. The empirical result of the meta path subset (hollow square) and anchored predicate path subset (hollow circle) is also illustrated in Fig.~\ref{fig:metapath_predicatepath}. 
+
+We find that, even if we select the most informative paths, the feature set generated by meta paths is typically bigger than the set of predicate paths, but results in similar performance. Moreover, the $165,331$ unique meta paths (not instances) extracted from SemMedDB that match (\textsf{gngm},\textsf{causes},\textsf{celf}) was too large to work with effectively. On the other hand, the number of unique anchored predicate paths totalled only $1,066$.
+
+Apart from the increase in feature set size, the use of meta paths also reduced the understandability of the results. The top discriminative paths found from the \{\textsf{city}\}$\xrightarrow{\textsf{capitalOf}}$\{\textsf{state}\} example in Tab.~\ref{tab:disc_path} from earlier show that the re-ranked anchored predicate paths $\mathbf{P}^*$ are more intuitive than the discovered meta paths $\mathbf{\Pi}$. Unfortunately, ``intutive''-ness is a difficult concept to test fully, so we leave a complete test of the understandability of predicate paths and meta paths as a matter for future work.
+
+
+\subsection{Fact Checking}
+
+In Tab.~\ref{tab:datasets} we compare the proposed fact-checking algorithm with 8 other link prediction algorithms on data from DBpedia and SemMedDB.
+
+In the \textbf{CapitalOf \#1} task, where the true \textsf{capitalOf} statements are mixed with false statements that match the \textsf{largestCity} predicate, the proposed method is shown to significantly outperform other methods. Recall that the set of discriminative predicate paths represent a sort of ``definition'' of the given predicate that is used as a model for fact checking. The top 5 most discriminative predicate paths for the \textbf{CapitalOf \#1} task were originally shown in Tab.~\ref{tab:disc_path}, and the top 2 most discriminative predicate paths are shown in Tab.~\ref{tab:missed_path}.
+
+The Adamic/Adar, Preferential Attachment, and Katz models performed very poorly in this example because the features that these purely topographical models rely on most strongly connects the largest city with the state. Unfortunately, only 17 US capital-cities are also the largest city in their state resulting in very poor performance for the topographical models. 
+
+%why is PPR bad
+
+Tasks in which the negatively-labeled data is randomly generated, as in \textbf{CapitalOf \#2} for example, are easier for topological models because, in many cases, the true-labeled statement is the one that is the best connected (especially when compared to random statements). Interestingly, SimRank performs slightly better than our model on the \textbf{Company CEO} and \textbf{NYT Bestseller} tasks. This is most probably because of the high connectivity between the entity endpoints, \ie,~anchors, and because of the lack of meta path variation, \eg, book authors and company CEOs have relatively few alternate paths that are suitable defining the given statement.%; the predicate \textsf{authorOf} is summarily defined at ``someone who writes a book'', and there are few alternate explanations for that relationship.  
+
+%Why SimRank performs well?
+
+AMIE performs slightly worse, but still competitively, on the \textbf{US Vice-President} task. This is because AMIE correctly detects the single most important predicate path that is capable of classifying nearly all of the vice-presidents. Our model detects several other predicate paths, resulting in similar, near perfect performance.
+
+Recall that the results in Tab.~\ref{tab:datasets} use a true/false label ratio of $20/80$ to simulate real-world fact checking scenarios where the proportion of false statements are significantly larger than true statements. This is not to say that there are more false statements in real-life, just that there are many more possible false statements than there are true statements. With this in mind, we further test the robustness of our model under various true/false label proportions. Figure~\ref{fig:robustness} illustrates the results of these tests where the proposed method performance (solid blue circle) is found to be relatively invariant to the percentage of labeled data as it changes from 10\% positively-labeled to 90\% positively labeled.
+
+
+Apart from the accuracy and robustness tests above, we also analyze the amount of time that each algorithm uses while calculating the score for a single statement of fact, \ie, the time it takes to calculate $\mathbf{X}^\prime$. The 8 tasks have similar execution complexity, so we combine the execution times and present the mean average and 95\% confidence interval in Fig.~\ref{fig:time}. We find that the our method (labeled PredPath) has an execution time comparable to other path-based methods, such as Katz and Semantic Proximity, and is faster than stochastic models like Path Constrained Random Walk, personalized PageRank, and the fast, approximate version of SimRank. We exclude the time taken for association rule mining from the AMIE results, otherwise AMIE requires almost an hour per query. 
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.49\textwidth]{./figs/time_wide}
+\caption{Time consumption of each algorithm. Point represents the average feature generation time of one query. Error bars represent 95\% confidence interval over the 8 tasks. Lower is better. The execution time of AMIE does not include the time ($\approx 4,000$ hours in total) spent on association rule mining.}
+\label{fig:time}
+\end{figure}
+
+\subsection{Statement Interpretation}
+
+So far we have seen that the predicate path model presented in this work is able to accurately check the validity of statements of fact. Perhaps the most important contribution of this work, is not just in the ability to check facts, but rather in the ability to explain the meaning of some relationship between entities. Current progress in knowledge and reasoning in artificial intelligence is limited by our inability to understand the meaning behind information. For instance, although neural network-based technologies can produce extremely accurate results, their learning mechanism does not provide an easily interpretable explanation for their answers. In contrast, our model explicitly provides a commonsense reason as to why a fact is deemed to be true or false. Table~\ref{tab:missed_path} shows some of the top predicate paths that are found by our model; we argue that they are generally intuitive and describe at least one key property about the given statement of fact.
+
+One particularly interesting finding from Tab.~\ref{tab:missed_path} is the predicate path: \textsf{vice president} $\langle$\textsf{successor}, $\textsf{president}^{-1}\rangle$ \textsf{president}, which encodes, for example, that eventual-President Andrew Johnson succeeded Hannibal Hamlin as the second vice president under President Abraham Lincoln. Indeed, 8 US presidents had two or more vice presidents (one succeeding the other), meaning that the US constitution allows for the possibility to replace one vice president with another -- a little known, yet valid part of the definition of what it means to be the US vice-president.
+
+This instance, and the other labeled instances in Tab.~\ref{tab:missed_path}, are those anchored predicate paths that AMIE does not find, and are sometimes highly specialized. In the above vice-president task, AMIE found predicate paths that were good enough to receive a 0.987 AUC score. In cases like these, Tab.~\ref{tab:missed_path} simply shows gaps in AMIE that our model is able to fill.
+
+The AMIE algorithm also mines the knowledge graph for associated paths, but we find it to be less accurate and computationally expensive. For example, in the triple $(x, \textsf{causes}, y)$, AMIE most closely associates $\psi(x)\xrightarrow{\textsf{prevents}}\psi(y)$ and $\psi(x)\xrightarrow{\textsf{disrupts}}\psi(y)$ meta paths, which are, in fact, the direct opposite of the original statement. We find that, by discriminating positive from negative examples, as described in Sec.~\ref{sec:fact_interpertation}, the discriminative predicate paths $\mathbf{P}^*$ are never negatively related and typically positively related to the true statement of fact.
+
+
+\section{Related Work} \label{sec:related_work}
+
+%Although many meta path based algorithms have been developed, the underlying meta paths used by those algorithms are manually annotated~\cite{Sun2011,Shi2014} or enumerated up to some path length $k$~\cite{Lao2010}. These generative methods are all impractical on large knowledge graphs with rich entity and predicate types. In DBpedia, for example, the number of length-$3$ meta paths is approximately $91$ billion. 
+
+%Association rule mining algorithms, such as the Association Rule Mining under Incomplete Evidence (AMIE) algorithm~\cite{Galarraga2013}, only generate global rules, and are therefore not applicable for fact checking if the definition of a predicate varies in context as we shown in section~\ref{sec:introduction}. A more recent meta path generation algorithm that prunes the search space using logistic regression was proposed by Meng {\em et al.}~\cite{Meng2015}, but pruning techniques like this are prone to premature rejection which often miss important discriminative paths.
+
+\vspace{5pt}\noindent\textbf{Discriminative Path Generation}. Although meta paths have been used in many methods such as similarity search, clustering, and link prediction~\cite{Shi2014,Sun2011,Sun2012,Lao2010}, these algorithms either require human annotated meta paths or enumerate all possible meta paths in the graph. Recently efforts have been made to meta path discovery and association rule mining, but most of the approaches have their own limitations. Meng~\etal, proposed a meta path generation algorithm that prunes the enumeration space by logistic regression, but this approach is prone to premature rejection and may miss important discriminative paths~\cite{Meng2015}. AMIE~\cite{Galarraga2013} is a global association rule mining algorithm which can not mine personalized,~\ie, context dependent, association rules as we shown in Sec.~\ref{sec:introduction} and \ref{sec:experiment}. Abedjan and Naumann proposed a predicate expansion algorithm~\cite{Abedjan2013} which can find predicate synonyms, but cannot find predicate paths that have discriminating power. The proposed discriminative path discovery framework in this work extracts meta paths and predicate paths from the graph directly with given endpoints, therefore our framework will not miss important predicate paths in the graph and is context-sensitive.
+
+\vspace{5pt}\noindent\textbf{Fact Checking}. With the large volume of data generated every day, the number of unverified statements begets the need for automated fact checking~\cite{Graves2012,Cohen2011}. To that end, many researchers have focused on automated fact checking in recent years. Finn~\etal~introduced a new interactive tool to help human fact checkers determine the quality of a statement by extracting the propagation of facts on Twitter~\cite{Finn2014}. Ennals~\etal~created a crowd-sourced platform that highlight disputed claims~\cite{Ennals2010}. Kwok~\etal~proposed a ensemble method utilizing the result from search engines to check a given statement~\cite{Kwok2001}. Hassan~\etal~proposed a numerical fact monitor, called FactWatcher~\cite{Hassan2014}, that uses an append only database and certain skyline operators~\cite{Wu2012,Jiang2011}, but FactWatcher is not applicable to knowledge graphs or nonnumerical statements. The True Knowledge System~\cite{TunstallPedoe2010} validates a statement of the fact using $1,500$ predefined and user provided association rules; unfortunately, this means that it is impossible to check a statement that does not already have a predefined association rule within True Knowledge. Ciampaglia~\etal~published a knowledge graph based fact checking algorithm~\cite{Ciampaglia2015} utilizing node connectivity, but does not take advantage of the type-labels in the heterogeneous information networks. Recently, Gu~\etal~published a question answering algorithm that converts a given question into a vector space model to find the answer~\cite{Gu2015}, but, like neural network based models~\cite{Mikolov2013}, the learned model is generally uninterpretable.
+
+
+\vspace{5pt}\noindent\textbf{Link Prediction}. Apart from classic homogeneous link prediction methods, such as Adamic/Adar~\cite{Adamic2003}, SimRank~\cite{Jeh2002}, Katz~\cite{Katz1953}, Preferential Attachment~\cite{Barabasi1999}, and Personalized PageRank~\cite{Haveliwala2002} {\em etc.}, many heterogeneous methods have been developed to leverage the rich information in heterogeneous information networks. Heterogeneous graphlet base methods~\cite{Lichtenwalter2012} predict the relation between two endpoints by counting the occurrence of certain heterogeneous motifs, which are not applicable to complex knowledge graphs due to the exponential number of possible graph motifs. Other heterogeneous link prediction methods that adapt from classic homogeneous algorithms, HeteSim~\cite{Shi2014} and PCRW~\cite{Lao2010}, depend on human annotated meta paths. PathSim~\cite{Sun2011}, a heterogeneous similarity metric, also requires hand crafted and symmetric meta paths as the input. Recently Dong~\etal, proposed a heterogeneous link prediction algorithm based on coupled networks, but also needs human annotated meta paths as input~\cite{Dong2015}. In contrast, this work automatically discovers the important meta paths and predicate paths that related to the given statement of fact.
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+We presented a fact checking framework for knowledge graphs that discovers the definition of a given statement of fact by extracting discriminative predicate paths from the knowledge graph, and uses the discovered model to validate the truthfulness of the given statement.
+
+To evaluate the proposed method, we checked the veracity of several thousand statements across 8 different tasks on DBpedia and SemMedDB. We found that our framework was the all around best in terms of fact-checking performance and has a running time similar to existing models. We further tested the robustness of our algorithm by examining different ratios of true to false information and found that our framework was generally invariant to the class ratio. Finally, we showed that the proposed framework can discover interpretable and informative discriminative paths that are missed by other methods.
+
+As this framework is the first of its kind, we leave much as a matter for future work. The next steps that are immediately obvious to us include extensions to this framework that perform (1) predicate identification, (2) enhanced entity representation, and (3) fact qualification. Predicate identification is the most natural extension to this framework wherein unnamed and unknown relationships can be implied through transitivity; for example, if a set of highly discriminative predicate paths between two sets of entities $x$ and $y$ exists, along with another set of highly discriminative predicate paths between $y$ and a third set of entities $z$, then we may be able to encode some special, transitive relationship between the entities in $x$ with the respective entities in $z$. Because we are encoding the meaning behind relationships and between entities, it is likely that we will be able to find natural implications that arise in arithmetic combinations of entities such as the canonical \textsf{King}-\textsf{man}+\textsf{women}=\textsf{Queen}, but with a human-interpretable representation for each operator that is not present in current vector-based models. Finally, we should be able to use mismatches and errors in our model to qualify some statement of fact; for example, the statement ``Rome is the capital of the Roman Empire'' is only true before 323 CE, after which the capital was changed to Constantinople.
+
+%ACKNOWLEDGMENTS are optional
+\section{Acknowledgments}
+This work is sponsored by an AFOSR grant FA9550-15-1-0003, and a John Templeton Foundation grant FP053369-M.
+
+
+
+
+%---- old algorithms, remove ignore if you want to display them
+\ignore{
+    \IncMargin{1em}
+    \begin{algorithm}
+    \SetAlgoLined
+    
+    % define keywords for data
+    \SetKwData{L}{$L$}
+    \SetKwData{U}{$u$}
+    \SetKwData{V}{$v$}
+    \SetKwData{S}{$s$}
+    \SetKwData{T}{$t$}
+    \SetKwData{R}{$r$}
+    \SetKwData{Sp}{$s^{\prime}$}
+    \SetKwData{Tp}{$t^{\prime}$}
+    \SetKwData{Rp}{$r^{\prime}$}
+    \SetKwData{Rpneg}{$r^{\prime -1}$}
+    \SetKwData{Rel}{$rel$}
+    \SetKwData{G}{$\mathcal{G}$}
+    \SetKwData{CurrentPath}{$P$}
+    \SetKwData{Visited}{$S$}
+    
+    % define keywords for functions 
+    \SetKwFunction{E}{E}
+    \SetKwFunction{Continue}{continue}
+    \SetKwFunction{Append}{append}
+    \SetKwFunction{Report}{report}
+    \SetKwFunction{Return}{return}
+    \SetKwFunction{Len}{length}
+    \SetKwFunction{This}{searchPredicatePath}
+    
+    % input/output data
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \SetKwInOut{Global}{global}
+    \Global{network \G, RDF triple (\U,\V,\Rel), path-length constraint \L}
+    \Input{current RDF triple (\S, \T, \R), current path \CurrentPath, visited nodes \Visited}
+    \Output{predicate path \CurrentPath}
+    
+    \BlankLine
+    
+    \If{\Len{\CurrentPath} $\geq$ \L or \T in \Visited}{
+        \Return \tcp*[r]{self-loop or exceed max length}
+    }
+    
+    \Append{\CurrentPath, \R}\;
+    \Append{\Visited, \T}\;
+    \BlankLine
+    
+    \If{\S == \V}{
+        \Report \CurrentPath \tcp*[r]{find a predicate path}
+        \Return \;
+    }
+    \BlankLine
+    
+    \ForEach{ $(\T,\Tp,\Rp) \in \E{\G}$}{
+        \tcp{construct path with out-going edges}
+        \eIf{\T in \CurrentPath}{
+            \Continue\;
+        }{
+            \This{\T,\Tp,\Rp, \CurrentPath, \Visited}\;
+        }
+    }
+    
+    \ForEach{ $(\T,\Tp,\Rpneg) \in \E{\G}$}{
+        \tcp{construct path with in-coming edges}
+        \eIf{\T in \CurrentPath}{
+            \Continue\;
+        }{
+            \This{\T,\Tp,\Rpneg, \CurrentPath, \Visited}\;
+        }
+    }
+    
+     \caption{ \protect\This(\protect\S, \protect\T, \protect\R, \protect\CurrentPath, \protect\Visited) }
+     \label{algo:search_predicate_path}
+    \end{algorithm}
+    \DecMargin{1em}
+    
+    
+    \IncMargin{1em}
+    \begin{algorithm}
+    % define keywords for data
+    \SetKwData{U}{$u$}
+    \SetKwData{V}{$v$}
+    \SetKwData{S}{$s$}
+    \SetKwData{T}{$t$}
+    \SetKwData{R}{$r$}
+    \SetKwData{Rel}{$rel$}
+    \SetKwData{G}{$\mathcal{G}$}
+    \SetKwData{P}{$\mathcal{P}$}
+    \SetKwData{predicatePath}{path}
+    
+    % define keywords for functions 
+    \SetKwFunction{Append}{append}
+    \SetKwFunction{searchPredicatePath}{searchPredicatePath}
+    \SetKwFunction{Report}{report}
+    \SetKwFunction{This}{constructPathSet}
+    
+    % input/output data
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \Input{network \G, RDF triple (\U,\V,\Rel)}
+    \Output{predicate paths \P}
+    
+    \BlankLine
+    
+    \tcp{remove edges with predicate \R}
+    \E{\G} $\leftarrow$ \{ (\S,\T,\R) | (\S,\T,\R) $\in$ \E{\G},\R $\neq$ \Rel \} \;
+    
+    \BlankLine
+    
+    \ForEach{$(\U,\T,\R) \in \E{\G}$}{
+        \predicatePath $\leftarrow$ \searchPredicatePath{\U,\T,\R, \{\}, \{\}}\;
+       \Append{\P,\predicatePath}\;
+    }
+    
+    \BlankLine
+    
+    \Report \P \;
+     \caption{ \protect\This(\protect\G, \protect\U, \protect\V, \protect\Rel) }
+     \label{algo:construct_path_set}
+    \end{algorithm}
+    \DecMargin{1em}
+}
+
+
+\begin{thebibliography}{10}
+
+\bibitem{Abedjan2013}
+Z.~Abedjan and F.~Naumann.
+\newblock {Synonym analysis for predicate expansion.}
+\newblock In {\em ESWC}, 2013.
+
+\bibitem{Adamic2003}
+L.~A. Adamic and E.~Adar.
+\newblock {Friends and neighbors on the Web.}
+\newblock {\em Social Networks}, 25(3), 2003.
+
+\bibitem{Barabasi1999}
+A.-L. Barab{\'a}si and R.~Albert.
+\newblock Emergence of scaling in random networks.
+\newblock {\em Science}, 286(5439), 1999.
+
+\bibitem{Ciampaglia2015}
+G.~L. Ciampaglia, P.~Shiralkar, L.~M. Rocha, J.~Bollen, F.~Menczer, and
+  A.~Flammini.
+\newblock Computational fact checking from knowledge networks.
+\newblock {\em PLoS ONE}, 10(6), 2015.
+
+\bibitem{Cohen2011}
+S.~Cohen, J.~T. Hamilton, and F.~Turner.
+\newblock {Computational journalism.}
+\newblock {\em CACM}, 54(10), 2011.
+
+\bibitem{Dong2015}
+Y.~Dong, J.~Zhang, J.~Tang, N.~V. Chawla, and B.~Wang.
+\newblock Coupledlp: link prediction in coupled networks.
+\newblock In {\em KDD}, 2015.
+
+\bibitem{Ennals2010}
+R.~Ennals, B.~Trushkowsky, and J.~M. Agosta.
+\newblock {Highlighting disputed claims on the web.}
+\newblock In {\em WWW}, 2010.
+
+\bibitem{Etzioni2004}
+O.~Etzioni, M.~Cafarella, D.~Downey, S.~Kok, A.-M. Popescu, T.~Shaked,
+  S.~Soderland, D.~S. Weld, and A.~Yates.
+\newblock Web-scale information extraction in knowitall: (preliminary results).
+\newblock In {\em WWW}, 2004.
+
+\bibitem{Finn2014}
+S.~Finn, P.~Metaxas, E.~Mustafaraj, M.~O{\textquoteright}Keefe, L.~Tang,
+  S.~Tang, and L.~Zeng.
+\newblock {TRAILS: a system for monitoring the propagation of rumors on
+  twitter.}
+\newblock In {\em Computational Journalism}, 2014.
+
+\bibitem{Galarraga2013}
+L.~A. Gal{\'a}rraga, C.~Teflioudi, K.~Hose, and F.~Suchanek.
+\newblock {AMIE: association rule mining under incomplete evidence in
+  ontological knowledge bases.}
+\newblock In {\em WWW}, 2013.
+
+\bibitem{Graves2012}
+L.~Graves and T.~Glaisyer.
+\newblock The fact-checking universe in spring 2012.
+\newblock {\em New America}, 2012.
+
+\bibitem{Gu2015}
+K.~Gu, J.~Miller, and P.~Liang.
+\newblock Traversing knowledge graphs in vector space.
+\newblock In {\em EMNLP}, 2015.
+
+\bibitem{Hassan2015}
+N.~Hassan, C.~Li, and M.~Tremayne.
+\newblock Detecting check-worthy factual claims in presidential debates.
+\newblock In {\em CIKM}, 2015.
+
+\bibitem{Hassan2014}
+N.~Hassan, A.~Sultana, Y.~Wu, G.~Zhang, C.~Li, J.~Yang, and C.~Yu.
+\newblock {Data in, fact out: automated monitoring of facts by FactWatcher.}
+\newblock In {\em VLDB}, 2014.
+
+\bibitem{Haveliwala2002}
+T.~H. Haveliwala.
+\newblock {Topic-sensitive pagerank.}
+\newblock In {\em WWW}, 2002.
+
+\bibitem{Jeh2002}
+G.~Jeh and J.~Widom.
+\newblock {SimRank: a measure of structural context similarity.}
+\newblock In {\em KDD}, 2002.
+
+\bibitem{Jiang2011}
+X.~Jiang, C.~Li, P.~Luo, M.~Wang, and Y.~Yu.
+\newblock {Prominent streak discovery in sequence data.}
+\newblock In {\em KDD}, 2011.
+
+\bibitem{Katz1953}
+L.~Katz.
+\newblock {A new status index derived from sociometric analysis.}
+\newblock {\em Psychometrika}, 18(1), 1953.
+
+\bibitem{Kilicoglu2012}
+H.~Kilicoglu, D.~Shin, M.~Fiszman, G.~Rosemblat, and T.~C. Rindflesch.
+\newblock {SemMedDB: a PubMed-scale repository of biomedical semantic
+  predications.}
+\newblock {\em Bioinformatics}, 28(23), 2012.
+
+\bibitem{Kusumoto2014}
+M.~Kusumoto, T.~Maehara, and K.-i. Kawarabayashi.
+\newblock {Scalable similarity search for SimRank.}
+\newblock In {\em SIGMOD}, 2014.
+
+\bibitem{Kwok2001}
+C.~Kwok, O.~Etzioni, and D.~S. Weld.
+\newblock {Scaling question answering to the web.}
+\newblock {\em TOIS}, 19(3), 2001.
+
+\bibitem{Lao2010}
+N.~Lao and W.~W. Cohen.
+\newblock {Relational retrieval using a combination of path-constrained random
+  walks.}
+\newblock {\em Machine Learning}, 81(1), 2010.
+
+\bibitem{Lehmann2014}
+J.~Lehmann, R.~Isele, and M.~Jakob.
+\newblock {DBpedia - a large-scale, multilingual knowledge base extracted from
+  Wikipedia.}
+\newblock {\em Semantic Web}, 5(1), 2014.
+
+\bibitem{Ley2009}
+M.~Ley.
+\newblock {DBLP: some lessons learned.}
+\newblock In {\em VLDB}, 2009.
+
+\bibitem{Kleinberg2007}
+D.~Liben-Nowell and J.~Kleinberg.
+\newblock The link-prediction problem for social networks.
+\newblock {\em JASIST}, 58(7), 2007.
+
+\bibitem{Lichtenwalter2012}
+R.~N. Lichtenwalter and N.~V. Chawla.
+\newblock {Vertex collocation profiles: subgraph counting for link analysis and
+  prediction.}
+\newblock In {\em WWW}, 2012.
+
+\bibitem{Meng2015}
+C.~Meng, R.~Cheng, S.~Maniu, P.~Senellart, and W.~Zhang.
+\newblock {Discovering meta-paths in large heterogeneous information networks.}
+\newblock In {\em WWW}, 2015.
+
+\bibitem{Mikolov2013}
+T.~Mikolov, I.~Sutskever, K.~Chen, G.~S. Corrado, and J.~Dean.
+\newblock Distributed representations of words and phrases and their
+  compositionality.
+\newblock In {\em NIPS}, 2013.
+
+\bibitem{Murphy2012}
+K.~P. Murphy.
+\newblock {\em Machine learning: a probabilistic perspective.}
+\newblock MIT press, 2012.
+
+\bibitem{Nickel2015}
+M.~Nickel, K.~Murphy, V.~Tresp, and E.~Gabrilovich.
+\newblock A review of relational machine learning for knowledge graphs: from
+  multi-relational link prediction to automated knowledge graph construction.
+\newblock In {\em arXiv:1503.00759}, 2015.
+
+\bibitem{Quinlan2014}
+J.~R. Quinlan.
+\newblock {\em C4.5: programs for machine learning.}
+\newblock Elsevier, 2014.
+
+\bibitem{Rindflesch2003}
+T.~C. Rindflesch and M.~Fiszman.
+\newblock The interaction of domain knowledge and linguistic structure in
+  natural language processing: interpreting hypernymic propositions in
+  biomedical text.
+\newblock {\em Biomedical Informatics}, 36(6), 2003.
+
+\bibitem{Shi2014}
+C.~Shi, X.~Kong, Y.~Huang, P.~S. Yu, and B.~Wu.
+\newblock {HeteSim: a general framework for relevance measure in heterogeneous
+  networks.}
+\newblock {\em TKDE}, 26(10), 2014.
+
+\bibitem{Sun2011}
+Y.~Sun, J.~Han, X.~Yan, P.~S. Yu, and T.~Wu.
+\newblock {PathSim: meta path-based top-K similarity search in heterogeneous
+  information networks.}
+\newblock In {\em VLDB}, 2011.
+
+\bibitem{Sun2012}
+Y.~Sun, B.~Norick, J.~Han, X.~Yan, P.~S. Yu, and X.~Yu.
+\newblock Integrating meta-path selection with user-guided object clustering in
+  heterogeneous information networks.
+\newblock In {\em KDD}, 2012.
+
+\bibitem{Swift1710}
+J.~Swift.
+\newblock {}.
+\newblock {\em The examiner.}, (15), Nov. 1710.
+
+\bibitem{TunstallPedoe2010}
+W.~Tunstall-Pedoe.
+\newblock {True Knowledge: open-domain question answering using structured
+  knowledge and inference.}
+\newblock {\em AI Magazine}, 31(3), 2010.
+
+\bibitem{Wu2012}
+Y.~Wu, P.~K. Agarwal, C.~Li, J.~Yang, and C.~Yu.
+\newblock {On "one of the few" objects.}
+\newblock In {\em KDD}, 2012.
+
+\bibitem{Wu2014}
+Y.~Wu, P.~K. Agarwal, C.~Li, J.~Yang, and C.~Yu.
+\newblock {Toward computational fact-checking.}
+\newblock In {\em VLDB}, 2014.
+
+\end{thebibliography}
+
+\end{document}

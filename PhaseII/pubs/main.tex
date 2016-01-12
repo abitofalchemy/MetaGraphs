@@ -1,0 +1,139 @@
+% THIS IS SIGPROC-SP.TEX - VERSION 3.1
+% WORKS WITH V3.2SP OF ACM_PROC_ARTICLE-SP.CLS
+% APRIL 2009
+%
+% It is an example file showing how to use the 'acm_proc_article-sp.cls' V3.2SP
+% LaTeX2e document class file for Conference Proceedings submissions.
+% ----------------------------------------------------------------------------------------------------------------
+% This .tex file (and associated .cls V3.2SP) *DOES NOT* produce:
+%       1) The Permission Statement
+%       2) The Conference (location) Info information
+%       3) The Copyright Line with ACM data
+%       4) Page numbering
+% ---------------------------------------------------------------------------------------------------------------
+% It is an example which *does* use the .bib file (from which the .bbl file
+% is produced).
+% REMEMBER HOWEVER: After having produced the .bbl file,
+% and prior to final submission,
+% you need to 'insert'  your .bbl file into your source .tex file so as to provide
+% ONE 'self-contained' source file.
+%
+% Questions regarding SIGS should be sent to
+% Adrienne Griscti ---> griscti@acm.org
+%
+% Questions/suggestions regarding the guidelines, .tex and .cls files, etc. to
+% Gerald Murray ---> murray@hq.acm.org
+%
+% For tracking purposes - this is V3.1SP - APRIL 2009
+
+\documentclass{sig-alternate}
+\setlength{\pdfpagewidth}{8.5in}
+\setlength{\pdfpageheight}{11in}
+\usepackage{comment}
+\usepackage[caption=false]{subfig}
+\usepackage{graphicx}
+
+\usepackage[ruled,vlined,commentsnumbered]{algorithm2e}
+\usepackage{adjustbox}
+\usepackage{paralist}
+\usepackage{lipsum}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{bbm}
+\usepackage{times}
+
+\usetikzlibrary{arrows,decorations.markings}
+\usetikzlibrary{shapes.arrows}
+
+\newtheorem{definition}{Definition}
+\newcommand{\ignore}[1]{}
+
+%\renewcommand{\textsf}[1]{\textsm{\sffamily{#1}}}
+\newcommand{\smf}[1]{\textsm{\textsf{#1}}}
+
+\newcommand{\eg}{\textit{e.g.}}
+\newcommand{\ie}{\textit{i.e.}}
+\newcommand{\etal}{{\em et al.}}
+
+\newenvironment{tightcenter}{%
+  \setlength\topsep{0pt}
+  \setlength\parskip{10pt}
+  \begin{center}
+}{%
+  \end{center}
+}
+
+\newcommand*{\LCdot}{\raisebox{-0.25ex}{\scalebox{1.5}{$\cdot$}}}
+
+
+\begin{document}
+
+\title{Growing Graphs from Hyperedge Replacement Grammars}
+
+
+\numberofauthors{1} %  in this sample file, there are a *total*
+% of EIGHT authors. SIX appear on the 'first-page' (for formatting
+% reasons) and the remaining two appear in the \additionalauthors section.
+%
+\author{
+% You can go ahead and credit any number of authors here,
+% e.g. one 'row of three' or two rows (consisting of one row of three
+% and a second row of one, two or three).
+%
+% The command \alignauthor (no curly braces needed) should
+% precede each author name, affiliation/snail-mail address and
+% e-mail address. Additionally, tag each line of
+% affiliation/address with \affaddr, and tag the
+% e-mail address with \email.
+%
+% 1st. author
+\alignauthor
+Salvador Aguinaga \hspace{.5cm} Corey Pennycuff \hspace{.5cm} Rodrigo Palacios$^\dag$ \hspace{.5cm} Tim Weninger\\
+       \affaddr{University of Notre Dame}\\
+       \affaddr{$^\dag$California State University -- Fresno}\\
+       \email{\{saguinag, cpennycu, tweninge\}@nd.edu}
+}
+% There's nothing stopping you putting the seventh, eighth, etc.
+% author on the opening page (as the 'third row') but we ask,
+% for aesthetic reasons that you place these 'additional authors'
+% in the \additional authors block, viz.
+\date{21 August 2015}
+% Just remember to make sure that the TOTAL number of authors
+% is the number that will appear on the first page PLUS the
+% number that will appear in the \additionalauthors section.
+
+\maketitle
+\begin{abstract}
+\lipsum[1]
+\end{abstract}
+
+% A category with the (minimum) three required fields
+\category{H.4}{Information Systems Applications}{Miscellaneous}
+%A category including the fourth, optional field follows...
+\category{H.2.8}{Database Management}{Database Applications-Data
+mining}
+
+
+\terms{Algorithm, Theory}
+
+% \keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
+
+\tikzstyle{opencircle} = [circle,minimum width=10, draw, fill=black!5, inner sep=1.5]
+\tikzstyle{faintopencircle} = [circle,minimum width=10, draw=black!40, fill=black!05, inner sep=1.5, text=black!40]
+\tikzstyle{itxset} = [rounded corners=3pt, draw, minimum height=12, inner sep=0]
+\tikzstyle{itxsetfocus} = [rounded corners=3pt, draw, ultra thick, minimum height=12, inner sep=0]
+\tikzstyle{internalnode} = [circle, draw, fill, minimum size=1.5mm,inner sep=0pt,outer sep=0pt]
+\tikzstyle{externalnode} = [circle, draw, minimum size=1.5mm,inner sep=0pt,outer sep=0pt]
+\tikzstyle{nonterminal} = [draw, inner sep=1.5]
+
+\include{related_work}
+
+
+\clearpage
+
+\bibliographystyle{abbrv}
+\bibliography{references}  % sigproc.bib is the name of the Bibliography in this case
+
+\balancecolumns
+% That's all folks!
+\end{document}

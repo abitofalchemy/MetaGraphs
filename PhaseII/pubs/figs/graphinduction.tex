@@ -1,0 +1,354 @@
+
+
+
+\begin{figure}
+\centering
+
+\tikzstyle{itxsetfocus} = [rounded corners=3pt, draw, very thick, minimum height=12, inner sep=0]
+\tikzstyle{internalnode} = [circle, draw, fill, minimum size=1.5mm,inner sep=0pt,outer sep=0pt]
+\tikzstyle{externalnode} = [circle, draw, minimum size=1.5mm,inner sep=0pt,outer sep=0pt]
+\tikzstyle{nonterminal} = [draw, inner sep=1.5]
+\tikzstyle{faintnonterminal} = [draw=black!40, inner sep=1.5, text=black!40]
+
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (1,0) {};
+\node (s) at (2,0) {LHS};
+\node (r) at (5.5,0) {Application of RHS to HyperGraph};
+\node (n) at (9.5,0) {New Graph};
+\node (space) at (10,2.5) {};
+\end{tikzpicture}
+}
+
+\vspace{.15cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (5.85,1.5){};
+
+\node [internalnode, label={[label distance=0.2mm]90:S}](S) at (6.45,1.5) {};
+\node [nonterminal](N) at (7.15,1.5){N};
+\draw (S) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 1};
+
+\node [nonterminal](n1) at (9.0,2.5) {N};
+
+\node [externalnode, label={[label distance=-0.5mm]90:y}](y) at (10.5,1.5) {};
+\node [externalnode, label={[label distance=0mm]90:x}](x) at (9.75,1.5) {};
+\node [externalnode, label={[label distance=-0.5mm]180:z}](z) at (9.75,0.5) {};
+
+\draw [thick](x) -- (y) node [midway, below] {\small T};
+\draw [thick](x) -- (z) node [midway, right] {\small T};
+
+\draw [thick](x) edge (n1);
+\draw [thick](y) edge (n1);
+\draw [thick](z) edge (n1);
+
+\node [nonterminal](n2) at (10.5,0.5) {N};
+\draw [thick](y) edge (n2);
+\draw [thick](z) edge (n2);
+
+
+\node [opencircle, very thick](y) at (13.0,1.5) {2};
+\node [opencircle, very thick](x) at (12.25,1.5) {1};
+\node [opencircle, very thick](z) at (12.25,0.5) {3};
+
+\draw [very thick](x) edge (y);
+\draw [very thick](x) edge (z);
+
+
+\end{tikzpicture}
+}
+\vspace{.25cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+
+
+\node [internalnode, label={[label distance=0mm]90:a}](a) at (6,2){};
+\node [internalnode, label={[label distance=0mm]90:b}](b) at (7.5,2){};
+\node [internalnode, label={[label distance=0mm]0:c}](c) at (6.75,1){};
+
+\node [nonterminal](N) at (6.75,1.6){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+\draw (c) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 2};
+
+\node [faintopencircle](zz) at (9.75,1.5) {};
+\node [internalnode, label={[label distance=-0.5mm]-45:a,1}](a) at (9.75,1.5) {};
+\node [faintopencircle](zz) at (10.5,1.5) {};
+\node [internalnode, label={[label distance=-0.5mm]-45:b,2}](b) at (10.5,1.5) {};
+\node [faintopencircle](zz) at (9.75,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]180:c,3}](c) at (9.75,0.5) {};
+\node [externalnode, label={[label distance=0mm]0:x}](x) at (9.75,2.5) {};
+
+\draw [very thin](a) edge (b);
+\draw [very thin](a) edge (c);
+
+
+\draw [thick] (x) -- (a) node [midway, left] {\small T};
+\draw [thick] (x) -- (b) node [midway, right] {\small T};
+
+\node [nonterminal](n1) at (9.0,2.5) {N};
+
+\draw [thick] (x) edge (n1);
+\draw [thick] (c) edge (n1);
+
+\node [faintnonterminal](n2) at (10.5,0.5) {N};
+\draw [very thin, color=black!50](b) edge (n2);
+\draw [very thin, color=black!50](c) edge (n2);
+
+\node [opencircle, very thick](v4) at (12.25,2.5) {4};
+\node [opencircle](v2) at (13.0,1.5) {2};
+\node [opencircle](v1) at (12.25,1.5) {1};
+\node [opencircle](v3) at (12.25,0.5) {3};
+
+\draw (v1) edge (v2);
+\draw (v1) edge (v3);
+\draw [very thick](v1) edge (v4);
+\draw [very thick](v2) edge (v4);
+
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+
+\node [internalnode, label={[label distance=0mm]90:a}](a) at (6,1.6){};
+\node [internalnode, label={[label distance=0mm]90:b}](b) at (7.5,1.6){};
+
+\node [nonterminal](N) at (6.75,1.6){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.6) -- (8.5,1.6);
+    
+\node (id) at (8.25,2.0) {\small Rule 3};
+
+
+\node [faintopencircle](zz) at (9.75,2.5) {};
+\node [internalnode, label={[label distance=-0.5mm]45:a,4}](a) at (9.75,2.5) {};
+\node [faintopencircle](v2) at (10.5,1.5) {2};
+\node [faintopencircle](v1) at (9.75,1.5) {1};
+\node [faintopencircle](zz) at (9.75,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]180:b,3}](b) at (9.75,0.5) {};
+\node [externalnode, label={[label distance=-0.5mm]:x}](x) at (9.0,2.5) {};
+
+\draw [very thin, color=black!50](v1) edge (v2);
+\draw [very thin, color=black!50](v1) edge (a);
+\draw [very thin, color=black!50](v1) edge (b);
+\draw [very thin, color=black!50](v2) edge (a);
+
+\draw [thick] (x) -- (a) node [midway, above] {\small T};
+\draw [thick] (x) -- (b) node [midway, left] {\small T};
+
+
+\node [faintnonterminal](n2) at (10.5,0.5) {N};
+\draw [very thin, color=black!50](v2) edge (n2);
+\draw [very thin, color=black!50](b) edge (n2);
+
+\node [opencircle, very thick](v5) at (11.5,2.5) {5};
+\node [opencircle](v4) at (12.25,2.5) {4};
+\node [opencircle](v2) at (13.0,1.5) {2};
+\node [opencircle](v1) at (12.25,1.5) {1};
+\node [opencircle](v3) at (12.25,0.5) {3};
+
+
+\draw (v1) edge (v2);
+\draw (v1) edge (v3);
+\draw (v1) edge (v4);
+\draw (v2) edge (v4);
+\draw [very thick](v4) edge (v5);
+\draw [very thick](v3) edge (v5);
+
+\node (space) at (10.25,2.5) {};
+
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+
+
+\node [internalnode, label={[label distance=0mm]90:a}](a) at (6,1.5){};
+\node [internalnode, label={[label distance=0mm]90:b}](b) at (7.5,1.5){};
+
+\node [nonterminal](N) at (6.75,1.5){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 4};
+
+\node [faintopencircle](zz) at (10.5,1.5) {};    
+\node [internalnode, label={[label distance=0.25mm]0:a,2}](a) at (10.5,1.5) {};
+\node [faintopencircle](zz) at (9.75,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]180:b,3}](b) at (9.75,0.5) {};
+\node [externalnode, label={[label distance=0mm]0:x}](x) at (10.5,0.5) {};
+\node [faintopencircle](v4) at (9.75,2.5) {4};
+
+\node [faintopencircle](v1) at (9.75,1.5) {1};
+\node [faintopencircle](v5) at (9.0,2.5) {5};
+
+\draw [very thin, color=black!50](v1) edge (a);
+\draw [very thin, color=black!50](v1) edge (v4);
+\draw [very thin, color=black!50](v1) edge (b);
+\draw [very thin, color=black!50](a) edge (v4);
+\draw [very thin, color=black!50](v5) edge (v4);
+\draw [very thin, color=black!50](b) edge (v5);
+
+
+\draw [thick] (x) -- (a) node [midway, right] {\small T};
+\draw [thick] (x) -- (b) node [midway, below] {\small T};
+
+
+\node [nonterminal](n1) at (10.125,1.0) {N};
+
+\draw [thick] (x) edge (n1);
+\draw [thick] (b) edge (n1);
+
+
+\node [opencircle](v5) at (11.5,2.5) {5};
+\node [opencircle](v4) at (12.25,2.5) {4};
+\node [opencircle](v2) at (13.0,1.5) {2};
+\node [opencircle](v1) at (12.25,1.5) {1};
+\node [opencircle](v3) at (12.25,0.5) {3};
+\node [opencircle, very thick](v6) at (13.0,0.5) {6};
+
+\draw (v1) edge (v2);
+\draw (v1) edge (v3);
+\draw (v1) edge (v4);
+\draw (v2) edge (v4);
+\draw (v4) edge (v5);
+\draw (v3) edge (v5);
+\draw [very thick](v2) edge (v6);
+\draw [very thick](v3) edge (v6);
+\end{tikzpicture}
+}
+
+\vspace{.15cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+
+
+\node [internalnode, label={[label distance=0mm]90:a}](a) at (6,1.5){};
+\node [internalnode, label={[label distance=0mm]90:b}](b) at (7.5,1.5){};
+
+\node [nonterminal](N) at (6.75,1.5){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 5};
+
+
+\node [faintopencircle](zz) at (9.75,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]180:a,3}](a) at (9.75,0.5) {};
+\node [faintopencircle](zz) at (10.5,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]0:b,6}](b) at (10.5,0.5) {};
+\node [faintopencircle](v4) at (9.75,2.5) {4};
+\node [faintopencircle](v2) at (10.5,1.5) {2};
+\node [faintopencircle](v1) at (9.75,1.5) {1};
+\node [faintopencircle](v5) at (9.0,2.5) {5};
+
+\draw [very thin, color=black!50](v1) edge (v2);
+\draw [very thin, color=black!50](v1) edge (v4);
+\draw [very thin, color=black!50](v1) edge (a);
+\draw [very thin, color=black!50](v2) edge (v4);
+\draw [very thin, color=black!50](v5) edge (v4);
+\draw [very thin, color=black!50](b) edge (v2);
+\draw [very thin, color=black!50](b) edge (a);
+\draw [very thin, color=black!50](v5) edge (a);
+
+
+
+\node [nonterminal](n1) at (10.125,1.0) {N};
+
+\draw [thick] (a) edge (n1);
+
+
+\node [opencircle](v5) at (11.5,2.5) {5};
+\node [opencircle](v4) at (12.25,2.5) {4};
+\node [opencircle](v2) at (13.0,1.5) {2};
+\node [opencircle](v1) at (12.25,1.5) {1};
+\node [opencircle](v3) at (12.25,0.5) {3};
+\node [opencircle](v6) at (13.0,0.5) {6};
+
+\draw (v1) edge (v2);
+\draw (v1) edge (v3);
+\draw (v1) edge (v4);
+\draw (v2) edge (v4);
+\draw (v4) edge (v5);
+\draw (v3) edge (v5);
+\draw (v2) edge (v6);
+\draw (v3) edge (v6);
+
+\end{tikzpicture}
+}
+
+\vspace{.15cm}
+\resizebox{.7\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (5.95,1.5){};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6.45,1.5){};
+\node [nonterminal](N) at (7.15,1.5){N};
+\draw (S) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 6};
+
+\node [faintopencircle](zz) at (9.75,0.5) {};
+\node [internalnode, label={[label distance=0.25mm]180:a,3}](a) at (9.75,0.5) {};
+\node [faintopencircle](v6) at (10.5,0.5) {6};
+\node [faintopencircle](v4) at (9.75,2.5) {4};
+\node [faintopencircle](v2) at (10.5,1.5) {2};
+\node [faintopencircle](v1) at (9.75,1.5) {1};
+\node [faintopencircle](v5) at (9.0,2.5) {5};
+
+\draw [very thin, color=black!50](v1) edge (v2);
+\draw [very thin, color=black!50](v1) edge (v4);
+\draw [very thin, color=black!50](v1) edge (a);
+\draw [very thin, color=black!50](v2) edge (v4);
+\draw [very thin, color=black!50](v5) edge (v4);
+\draw [very thin, color=black!50](v6) edge (v2);
+\draw [very thin, color=black!50](v6) edge (a);
+\draw [very thin, color=black!50](v5) edge (a);
+
+
+
+\node [opencircle](v5) at (11.5,2.5) {5};
+\node [opencircle](v4) at (12.25,2.5) {4};
+\node [opencircle](v2) at (13.0,1.5) {2};
+\node [opencircle](v1) at (12.25,1.5) {1};
+\node [opencircle](v3) at (12.25,0.5) {3};
+\node [opencircle](v6) at (13.0,0.5) {6};
+
+\draw (v1) edge (v2);
+\draw (v1) edge (v3);
+\draw (v1) edge (v4);
+\draw (v2) edge (v4);
+\draw (v4) edge (v5);
+\draw (v3) edge (v5);
+\draw (v2) edge (v6);
+\draw (v3) edge (v6);
+
+\end{tikzpicture}
+}
+\caption{Caption}
+\label{fig:ruleinduction}
+\end{figure}

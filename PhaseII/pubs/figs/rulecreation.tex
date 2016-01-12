@@ -1,0 +1,120 @@
+\begin{figure}
+\centering
+
+\resizebox{.95\linewidth}{!}{
+\begin{tikzpicture}
+\node (a) at (2.4,2.25) {3};
+\node (b) at (2.8,2.25) {4};
+\node (c) at (3.2,2.25) {5};
+\node [itxset,minimum width=40] at (2.8,2.25) {};
+\node (k) at (3.6,1.5) {4};
+\node (l) at (4.0,1.5) {5};
+\node (m) at (4.4,1.5) {6};
+\draw [shorten >=-1mm, shorten <=-1mm, very thick] (b) -- (k);
+\draw [shorten >=-1mm, shorten <=-1mm, very thick] (c) -- (l);
+\node[itxsetfocus,minimum width=40] at (4.0,1.5) {};
+\node (n) at (3.8,0.75) {5};
+\node (o) at (4.2,0.75) {6};
+\draw [shorten >=-1mm, shorten <=-1mm, very thick] (l) edge (n);
+\draw [shorten >=-1mm, shorten <=-1mm, very thick] (m) edge (o);
+\node[itxset,minimum width=30] at (4.0,.75) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (5.5,1.5){};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (7.0,1.5){};
+
+\node [nonterminal](N) at (6.25,1.5){N};
+\draw [very thick] (a) edge (N);
+\draw [very thick] (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (7.3,1.85) -- (7.8,1.85);
+\node (id) at (7.55,2.1) {\small Rule};
+    
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (9.5,2.5) {};
+\node [internalnode, label={[label distance=0mm]180:b}](b) at (8.25,1.25) {};
+\node [externalnode, label={[label distance=0.25mm]0:x}](x) at (9.5,1.25) {};
+
+\draw [very thick] (x) -- (a) node [midway, right, blue] {\small T$_1$};
+\draw [very thick] (x) -- (b) node [midway, below, blue] {\small T$_2$};
+
+
+\node [nonterminal](n1) at (8.875,1.8750) {N};
+
+\draw [very thick] (x) edge (n1);
+\draw [very thick] (b) edge (n1);
+
+
+\node [faintopencircle](v1) at (10.5,3) {\scriptsize 1};
+\node [faintopencircle](v2) at (11.5,3) {\scriptsize2};
+\node [faintopencircle](v3) at (11.5,2.0) {\scriptsize3};
+\node [opencircle](v4) at (12.5,2.0) {\scriptsize4};
+\node [opencircle](v5) at (11.5,1.0) {\scriptsize5};
+\node [opencircle](v6) at (12.5,1.0) {\scriptsize6};
+\draw  [very thin, color=black!40](v1) edge (v2);
+\draw  [very thin, color=black!40](v1) edge (v5);
+\draw  [very thin, color=black!40](v2) edge (v3);
+\draw  [very thin, color=black!40](v2) edge (v4);
+\draw  [very thin, color=black!40](v3) edge (v4);
+\draw  [very thin, color=black!40](v3) edge (v5);
+\draw  [very thick] (v4) -- (v6) node [midway, right,blue] {\small T$_1$};
+\draw  [very thick] (v5) -- (v6) node [midway, below,blue] {\small T$_2$};
+
+
+\node [blue] (l1) at (3.05,1.85) {\small a};
+\node (l1) at (3.15,1.9) {};
+\node (r1) at (5.5,1.5) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=20, in=130] to  (r1);
+
+\node [blue] (l1) at (3.85,1.9) {\small b};
+\node (l1) at (3.9,1.9) {};
+\node (r2) at (7.0,1.5) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=20, in=130] to  (r2);
+
+\node [blue] (l1) at (3.7,1.1) {\small n$_1$};
+\node [blue] (l1) at (4.55,1.1) {\small n$_2$};
+
+\node [blue] (l1) at (8.4,1.65) {\small n$_1$};
+\node [blue] (l1) at (9.3,1.65) {\small n$_2$};
+%\node (l1) at (3.8,1.0) {};
+%\node (r2) at (9.75,1.9) {};
+%\draw [->, >=stealth] (l1) [out=10, in=-155] to  (r2);
+
+%\node (l1) at (4.25,1.0) {};
+%\node (r2) at (9.75,1.9) {};
+%\draw [->, >=stealth] (l1) [out=10, in=-155] to  (r2);
+
+
+\node (l1) at (5.5,1.5) {};
+\node (r2) at (9.5,2.5) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=30, in=170] to  (r2);
+
+\node (l1) at (7.0,1.5) {};
+\node (r2) at (8.25,1.25) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=20, in=130] to  (r2);
+
+%\node (l1) at (13.9,2.0) {};
+%\node (r2) at (10.5,2.5) {};
+%\draw [->, >=stealth] (l1) [out=160, in=10] to  (r2);
+
+\node (l1) at (11.9,0.75) {};
+\node (r2) at (9.0,1.0) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=-170, in=-20] to  (r2);
+
+\node (l1) at (12.5,1.5) {};
+\node (r2) at (9.85,1.85) {};
+\draw [->, >=stealth, very thin, color=black!70] (l1) [out=-175, in=-20] to  (r2);
+
+%\node (r2) at (9.25,1.25) {};
+%\node (l1) at (12.9,1.0) {};
+%\draw [->, >=stealth] (l1) [out=-175, in=-40] to  (r2);
+
+\node at (3.5,3.5) { Tree Decomposition (subtree)};
+\node at (6.25,3.5) {LHS};
+\node at (8.75,3.5) {RHS};
+\node at (11.5,3.5) {Original Graph};
+\end{tikzpicture}
+}
+
+\caption{Caption}
+\label{fig:my_label}
+\end{figure}

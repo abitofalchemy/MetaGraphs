@@ -1,0 +1,65 @@
+\section{Experiments}
+
+Hyperedge replacement grammars enables us to learn how networks grow and how to predict future instances of the network in question. In this work, we examine well established generative models to compare and distinguish the benefits our approach provides. We consider the properties that underlie a number of real-world networks and compare the distribution of graphs generated using generators for random graphs, such as Erdos-Renyi-Gilber, Newman-watts-Strogatz, Barabasi-Albert, Kronecker, ERGM, and Forestfire graphs.
+
+Experiments were carried out by implementing hyperedge replacement grammars graph induction using the following high-level programming laguages: Python, R, and C++.  
+
+%% could be pushed out to a Supplementary Materials appendix
+\subsection{Real Networks Examined}
+We cosider real-world networks that exibit properties that are both common to many networks across different fields and distinct properties inherent only to some networks. These network examples help frame the context of this work. 
+
+\begin{table}[h]
+\centering
+\caption{S}
+\renewcommand\arraystretch{1.3}
+\renewcommand\tabcolsep{4pt}
+  \begin{tabular}{p{2cm}ll}
+  \textbf{Type} & \textbf{Dataset Name} & G(\textbf{n,m}) \\%\toprule
+  Social Networks & Karate Club & $n = 34, m=78$ \\
+  	& Some other & \\
+  Knowledge Network & Wikipedia \\
+  Scientific Collaboration & Microsoft Academic Search Bibliographic & \\
+  & DBLP Bibliographic  & \\
+\end{tabular}
+\label{tab:dsstats}
+\end{table}
+
+
+
+\subsection{Erdos-Renyi-Gilbert}
+A bionomial gaph that choses eah of the possible edges with a probablity p.
+\subsection{Newman-Watts-Strogatz}
+Models a small-world graph by specifying the number of nodes, where each node is joined by its $k$ nearest neighbors in a ring topology with shortcuts created by the addition of new edges of each edge having a probability $p$
+
+\subsection{Preferntial Attachement}
+The Barabasi-Albert graph model is configured to have $n$ nodes and $m$ edges that preferentially attach from a new node to existing nodes of high degegree~\cite{barabasi1999emergence}.
+
+\subsection{Kronecker Graphs}
+
+\subsection{Exponential Random Graph Models}
+
+
+
+
+\section{Related Work}
+Well-accepted and useful applications of graph theory includes those used to model networks in the real world. Understanding the organizing principles of natural and engineered networks: symmetry, invariance, density, and regularity-- is what mathematicians, engineers, and computer scientists feast on.  How networks grow is an area of interest in physics, biology, sociology, and engineering, but it not limited to this set by far. In the social sciences social structure is explored in a study of a problem with runaways, which dates back to the 1930s~\cite{borgatti2009network}.  %% provide other relevant examples
+Interest in generative models has been around for a long time. Significant advancement in the study of network structure using models for generating random graphs was pioneered in by Edgar Gilber, Paul Erdos and Alfred Renyi around 1960~\cite{gilbert1959,erd6s1960evolution}. Henceforth, a number of generative models have been developed on all fronts, which are designed to exhibit the network properties that best explains the available data~\cite{Kemp05082008}.   
+
+The challenge lies in balancing competing forces of simplicity of design, a concept tightly coupled with the need to capture salient features of the network, and the challenges of analyzing the model-- if want it to be good or at least useful.
+
+Here we describe relevant prior art in two research areas our contribution is perched on: generative modes and hyper-edge replacement grammars.
+
+\subsection{Generative Models}
+Generative models that underlie the dynamically growing Web graph (as in the World Wide Web) have received a great deal attention for some time now. This graph's nodes and edges have been shown to exhibit power law and lognormal distributions in empirical studies ~\cite{mitzenmacher2004brief, few}.  The Web graph is a real-world graph, with pages and its hyperlinks correspond this graph's nodes and edges, respectively.  We begin by looking at \textit{preferenital attachment}, which is an example of a graph that grows by having new added objects attach to popular objects. \textcolor{red}{\em Add more detail?} % the multiplicative 
+
+Kronecker graphs is another class of a generative network models obeying many of the static and temporally evolved network patterns empirically observed in real-world networks including the Web, internet topology, peer-to-peer networks, etc.)~\cite{Kepner_Gilbert.ch9_leskovec_2011,leskovec2010,many}.  
+
+Exponential random graphs models (ERGMs) belong to a class of statistical models, also known as $p^*$ models, that has been used extensively to model social behavior in humans and animals. More recently, ERGMs are being used to model the structure as well as other complex neurological interactions of the brain~{bullmoreSporns2009complex,10.1371/Simpson2011.pone.0020039,GOODREAU2009}. Goldenberg {\em et al.} survey statistical models and discuss how ERGMs are an extension of of the Erdos-Renyi-Gilbert model to account for popularity, expansiveness and network effects due to reciprocation~\cite{goldenberg2010survey,PhysRevE.88.032810}.
+
+
+
+%   \subsection{Stochastic Models} Models that grow graphs over an infinite sequence of discrete time-steps bounded or confined by set of probabilistic rules. 
+% }
+
+
+\subsection{Hyper-edge Replacement Grammars}

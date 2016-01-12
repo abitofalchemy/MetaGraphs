@@ -1,0 +1,280 @@
+
+\begin{figure}
+\centering
+
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (1,0) {};
+\node (s) at (2.5,0) {Tree Decomposition};
+\node (r) at (5.6,0) {LHS};
+\node (r) at (8.5,0) {RHS};
+\node (space) at (10,2.5) {};
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+
+\node (a) at (3.5,2) {3};
+\node (b) at (3.9,2) {4};
+\node (c) at (4.3,2) {5};
+\node [itxsetfocus,minimum width=40] at (3.9,2) {};
+\node (d) at (2.4,1) {2};
+\node (e) at (2.8,1) {3};
+\node (f) at (3.2,1) {4};
+\node (g) at (3.6,1) {5};
+\draw [shorten >=-1mm, shorten <=-1mm] (a) edge (e);
+\draw [shorten >=-1mm, shorten <=-1mm] (b) edge (f);
+\draw [shorten >=-1mm, shorten <=-1mm] (c) edge (g);
+\node[itxset,minimum width=50] at (3,1) {};
+\node (k) at (4.7,1) {4};
+\node (l) at (5.1,1) {5};
+\node (m) at (5.5,1) {6};
+\draw [shorten >=-1mm, shorten <=-1.3mm] (b) edge (k);
+\draw [shorten >=-1mm, shorten <=-1mm] (c) edge (l);
+\node[itxset,minimum width=40] at (5.1,1) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:S}](S) at (6.3,1.5) {};
+\node [nonterminal](N) at (7.1,1.5){N};
+\draw (S) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+\node (id) at (8.25,2.0) {\small Rule 1};    
+
+\node [nonterminal](n1) at (9.0,2.5) {N};
+
+\node [externalnode, label={[label distance=-0.5mm]90:y}](y) at (10.5,1.5)  {};
+\node [externalnode, label={[label distance=0mm]90:x}](x) at (9.75,1.5)  {};
+\node [externalnode, label={[label distance=-0.5mm]180:z}](z) at (9.75,0.5)  {};
+
+\draw (x) -- (y) node [midway, below] {\small T};
+\draw (x) -- (z) node [midway, right] {\small T};
+
+\draw (x) edge (n1);
+\draw (y) edge (n1);
+\draw (z) edge (n1);
+
+\node [nonterminal](n2) at (10.5,0.5) {N};
+\draw (y) edge (n2);
+\draw (z) edge (n2);
+\node (space) at (11,2.5) {};
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+\node (a) at (3.5,2.25) {3};
+\node (b) at (3.9,2.25) {4};
+\node (c) at (4.3,2.25) {5};
+\node [itxset,minimum width=40] at (3.9,2.25) {};
+\node (d) at (2.4,1.5) {2};
+\node (e) at (2.8,1.5) {3};
+\node (f) at (3.2,1.5) {4};
+\node (g) at (3.6,1.5) {5};
+\draw [shorten >=-1mm, shorten <=-1mm] (a) edge (e);
+\draw [shorten >=-1mm, shorten <=-1mm] (b) edge (f);
+\draw [shorten >=-1mm, shorten <=-1mm] (c) edge (g);
+\node[itxsetfocus,minimum width=50] at (3,1.5) {};
+\node (h) at (2.6,0.75) {1};
+\node (i) at (3.0,0.75) {2};
+\node (j) at (3.4,0.75) {5};
+\draw [shorten >=-1mm, shorten <=-1mm] (d) edge (i);
+\draw [shorten >=-1mm, shorten <=-1mm] (g) edge (j);
+\node[itxset,minimum width=40] at (3,0.75) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6,2){};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (7.5,2){};
+\node [internalnode, label={[label distance=0.2mm]0:c}](c) at (6.75,1){};
+
+\node [nonterminal](N) at (6.75,1.6){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+\draw (c) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 2};
+    
+\node [internalnode, label={[label distance=0.2mm]-90:a}](a) at (9.75,1.5) {};
+\node [internalnode, label={[label distance=0.2mm]-90:b}](b) at (10.5,1.5) {};
+\node [internalnode, label={[label distance=0.2mm]0:c}](c) at (9.75,0.5) {};
+\node [externalnode, label={[label distance=0.2mm]0:x}](x) at (9.75,2.5) {};
+
+\draw (x) -- (a) node [midway, left] {\small T};
+\draw (x) -- (b) node [midway, right] {\small T};
+
+\node [nonterminal](n1) at (9.0,2.5) {N};
+
+\draw (x) edge (n1);
+\draw (c) edge (n1);
+
+\node (space) at (11,2.5) {};
+
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+
+\begin{tikzpicture}
+\node (space) at (2.4,2.0) {};
+\node (d) at (3.2,2.0) {2};
+\node (e) at (3.6,2.0) {3};
+\node (f) at (4.0,2.0) {4};
+\node (g) at (4.4,2.0) {5};
+\node[itxset,minimum width=50] at (3.8,2.0) {};
+\node (h) at (3.4,1.25) {1};
+\node (i) at (3.8,1.25) {2};
+\node (j) at (4.2,1.25) {5};
+\draw [shorten >=-1mm, shorten <=-1mm] (d) edge (i);
+\draw [shorten >=-1mm, shorten <=-1mm] (g) edge (j);
+\node[itxsetfocus,minimum width=40] at (3.8,1.25) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6,1.6){};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (7.5,1.6){};
+
+\node [nonterminal](N) at (6.75,1.6){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.6) -- (8.5,1.6);
+    
+\node (id) at (8.25,2.0) {\small Rule 3};
+    
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (9.75,2.25) {};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (9.75,1.0) {};
+\node [externalnode, label={[label distance=0.2mm]90:x}](x) at (9.0,2.25) {};
+
+\draw (x) -- (a) node [midway, above] {\small T};
+\draw (x) -- (b) node [midway, left] {\small T};
+
+\node (space) at (11,2.5) {};
+
+\end{tikzpicture}
+}
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+\node (a) at (2.4,2.25) {3};
+\node (b) at (2.8,2.25) {4};
+\node (c) at (3.2,2.25) {5};
+\node [itxset,minimum width=40] at (2.8,2.25) {};
+\node (k) at (3.6,1.5) {4};
+\node (l) at (4.0,1.5) {5};
+\node (m) at (4.4,1.5) {6};
+\draw [shorten >=-1mm, shorten <=-1mm] (b) edge (k);
+\draw [shorten >=-1mm, shorten <=-1mm] (c) edge (l);
+\node[itxsetfocus,minimum width=40] at (4.0,1.5) {};
+\node (n) at (3.8,0.75) {5};
+\node (o) at (4.2,0.75) {6};
+\draw [shorten >=-1mm, shorten <=-1mm] (l) edge (n);
+\draw [shorten >=-1mm, shorten <=-1mm] (m) edge (o);
+\node[itxset,minimum width=30] at (4.0,.75) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6,1.5){};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (7.5,1.5){};
+
+\node [nonterminal](N) at (6.75,1.5){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+\node (id) at (8.25,2.0) {\small Rule 4};
+    
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (10.5,2.0) {};
+\node [internalnode, label={[label distance=0mm]180:b}](b) at (9.75,1.25) {};
+\node [externalnode, label={[label distance=0.25mm]0:x}](x) at (10.5,1.25) {};
+
+\draw (x) -- (a) node [midway, right] {\small T};
+\draw (x) -- (b) node [midway, below] {\small T};
+
+
+\node [nonterminal](n1) at (10.125,1.75) {N};
+
+\draw (x) edge (n1);
+\draw (b) edge (n1);
+
+\node (space) at (11,2.5) {};
+\end{tikzpicture}
+}
+
+
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (2.2,2.0) {};
+\node (k) at (3.4,2.25) {4};
+\node (l) at (3.8,2.25) {5};
+\node (m) at (4.2,2.25) {6};
+\node[itxset,minimum width=40] at (3.8,2.25) {};
+\node (n) at (3.6,1.5) {5};
+\node (o) at (4.0,1.5) {6};
+\draw [shorten >=-1mm, shorten <=-1mm] (l) edge (n);
+\draw [shorten >=-1mm, shorten <=-1mm] (m) edge (o);
+\node[itxsetfocus,minimum width=30] at (3.8,1.5) {};
+\node (p) at (3.8,0.75) {6};
+\draw [shorten >=-1mm, shorten <=-1mm] (o) edge (p);
+\node[itxset,minimum width=20] at (3.8,0.75) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6,1.5){};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (7.5,1.5){};
+
+\node [nonterminal](N) at (6.75,1.5){N};
+\draw (a) edge (N);
+\draw (b) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 5};
+    
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (9.75,1.25) {};
+\node [internalnode, label={[label distance=0.2mm]90:b}](b) at (10.5,1.25) {};
+
+
+
+\node [nonterminal](n1) at (10.125,1.75) {N};
+
+\draw (a) edge (n1);
+
+\node (space) at (11,2.5) {};
+
+
+\end{tikzpicture}
+}
+
+\vspace{.15cm}
+\resizebox{.8\linewidth}{!}{
+\begin{tikzpicture}
+\node (space) at (2.2,2.0) {};
+
+\node (n) at (3.6,2.0) {5};
+\node (o) at (4.0,2.0) {6};
+\node[itxset,minimum width=30] at (3.8,2.0) {};
+\node (p) at (3.8,1.25) {6};
+\draw [shorten >=-1mm, shorten <=-1mm] (o) edge (p);
+\node[itxsetfocus,minimum width=20] at (3.8,1.25) {};
+
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (6.25,1.5){};
+
+\node [nonterminal](N) at (7.0,1.5){N};
+\draw (a) edge (N);
+
+\draw [decoration={markings,mark=at position 1 with
+    {\arrow[scale=2,>=stealth]{>}}},postaction={decorate}] (8.0,1.5) -- (8.5,1.5);
+    
+\node (id) at (8.25,2.0) {\small Rule 6};
+    
+\node [internalnode, label={[label distance=0.2mm]90:a}](a) at (9.75,1.5) {};
+
+
+\node (space) at (11,2.5) {};
+
+\end{tikzpicture}
+}
+\caption{Caption}
+\label{fig:ruleinduction}
+\end{figure}

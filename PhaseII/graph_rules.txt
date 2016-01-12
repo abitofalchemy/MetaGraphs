@@ -1,0 +1,19 @@
+Substructure discovery using minimum description length and background knowledge
+DJ Cook, LB Holder - Journal of Artificial Intelligence Research, 1994 - jair.org
+Although their method does not address the underlying combinatorial nondeterminism, heuristic approaches could provide a feasible method for extracting substructures in the form of graph grammars. ...
+Cited by 451 Related articles All 20 versions Cite Save
+
+Substucture Discovery in the SUBDUE System.
+LB Holder, DJ Cook, S Djoko - KDD workshop, 1994 - aaai.org
+Department of Computer Science and ... [8] LB Holder, DJ Cook ... In Fourth International Workshop
+on Graph Grammars and Their Application to Computer Sci- ence, pages 461-474, 1991. ...
+Cited by 245 Related articles All 6 versions Cite Save More
+
+Knowledge discovery from structural data
+DJ Cook, LB Holder, S Djoko - Journal of Intelligent Information Systems, 1995 - Springer
+Engineering, University of Texas at Arlington ... COOK, HOLDER AND DJOKO ... Research in pattern
+recognition has begun to investigate the use of graphs and graph grammars as an ...
+Cited by 23 Related articles All 7 versions Cite Save
+
+
+
